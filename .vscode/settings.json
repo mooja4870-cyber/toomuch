@@ -1,0 +1,6 @@
+{
+  "python.defaultInterpreterPath": "python3",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}"
+  ]
+}
