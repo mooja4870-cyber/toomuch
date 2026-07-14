@@ -6,6 +6,16 @@ from datetime import datetime, timedelta
 
 st.set_page_config(page_title="한국 주식시장 과열 판별기", page_icon="🔥", layout="wide")
 
+@st.cache_data(ttl=86400)
+def get_stock_list(region):
+    if region == "국장 (한국)":
+        return fdr.StockListing('KRX')
+    else:
+        df_nasdaq = fdr.StockListing('NASDAQ')
+        df_nyse = fdr.StockListing('NYSE')
+        df_amex = fdr.StockListing('AMEX')
+        return pd.concat([df_nasdaq, df_nyse, df_amex])
+
 st.title("🔥 코스피/코스닥 및 개별 종목 과열 판별기")
 st.markdown("""
 특정 시점을 기준으로 주식 시장 및 개별 종목의 과열 여부를 수치화하여 판별합니다.
@@ -20,11 +30,29 @@ target_ticker = ""
 if region == "국장 (한국)":
     market_type = st.sidebar.radio("대상 선택", ["코스피 (KOSPI)", "코스닥 (KOSDAQ)", "개별 종목"])
     if market_type == "개별 종목":
-        target_ticker = st.sidebar.text_input("종목 코드 (예: 삼성전자 -> 005930)", "005930")
+        search_keyword = st.sidebar.text_input("종목명 검색 (예: 삼성, 현대)", "")
+        if search_keyword:
+            df_stocks = get_stock_list(region)
+            filtered = df_stocks[df_stocks['Name'].str.contains(search_keyword, case=False, na=False) | df_stocks['Symbol'].str.contains(search_keyword, case=False, na=False)].copy()
+            if not filtered.empty:
+                filtered['Display'] = filtered['Name'] + " (" + filtered['Symbol'] + ")"
+                selected_display = st.sidebar.selectbox("검색 결과 선택", filtered['Display'])
+                target_ticker = selected_display.split("(")[-1].replace(")", "")
+            else:
+                st.sidebar.warning("검색 결과가 없습니다.")
 else:
     market_type = st.sidebar.radio("대상 선택", ["다우 (Dow Jones)", "S&P 500", "나스닥 (NASDAQ)", "개별 종목"])
     if market_type == "개별 종목":
-        target_ticker = st.sidebar.text_input("종목 티커 (예: 애플 -> AAPL, 테슬라 -> TSLA)", "AAPL")
+        search_keyword = st.sidebar.text_input("종목명 검색 (예: Apple, TSLA)", "")
+        if search_keyword:
+            df_stocks = get_stock_list(region)
+            filtered = df_stocks[df_stocks['Name'].str.contains(search_keyword, case=False, na=False) | df_stocks['Symbol'].str.contains(search_keyword, case=False, na=False)].copy()
+            if not filtered.empty:
+                filtered['Display'] = filtered['Name'] + " (" + filtered['Symbol'] + ")"
+                selected_display = st.sidebar.selectbox("검색 결과 선택", filtered['Display'])
+                target_ticker = selected_display.split("(")[-1].replace(")", "")
+            else:
+                st.sidebar.warning("검색 결과가 없습니다.")
 
 target_date = st.sidebar.date_input("기준 일자", datetime.today())
 
