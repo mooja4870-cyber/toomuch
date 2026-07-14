@@ -185,114 +185,112 @@ def evaluate_overheat(row):
     elif val < 0 and val < row['MACD']: s = -5; txt = "강한 하락세 (-5)"
     elif val < 0: s = -3; txt = "하락세 (-3)"
     else: s = 0; txt = "정상 (0)"
-    total_delta += s
-    details.append(("7. MACD 히스토그램", f"{val:.2f}", txt))
-
-    # 8. Stochastic %K
+    total_delta += s; details.append(("7. MACD 히스토그램", f"{val:.2f}", txt))
     val = row['Stoch_K']
     if val >= 85: s = 5; txt = "극도 과매수 (+5)"
     elif val >= 80: s = 3; txt = "과매수 징후 (+3)"
     elif val <= 15: s = -5; txt = "극도 과매도 (-5)"
     elif val <= 20: s = -3; txt = "과매도 징후 (-3)"
     else: s = 0; txt = "정상 (0)"
-    total_delta += s
-    details.append(("8. 스토캐스틱 %K", f"{val:.1f}", txt))
-
-    # 9. Williams %R
+    total_delta += s; details.append(("8. 스토캐스틱 %K", f"{val:.1f}", txt))
     val = row['Will_R']
     if val >= -10: s = 5; txt = "극도 과매수 (+5)"
     elif val >= -20: s = 3; txt = "과매수 징후 (+3)"
     elif val <= -90: s = -5; txt = "극도 과매도 (-5)"
     elif val <= -80: s = -3; txt = "과매도 징후 (-3)"
     else: s = 0; txt = "정상 (0)"
-    total_delta += s
-    details.append(("9. Williams %R", f"{val:.1f}", txt))
-
-    # 10. MFI (자금 유입 지수)
+    total_delta += s; details.append(("9. Williams %R", f"{val:.1f}", txt))
     val = row['MFI']
     if val >= 80: s = 5; txt = "자금 유입 과열 (+5)"
     elif val >= 75: s = 3; txt = "자금 유입 강함 (+3)"
     elif val <= 20: s = -5; txt = "자금 유출 심각 (-5)"
     elif val <= 25: s = -3; txt = "자금 유출 지속 (-3)"
     else: s = 0; txt = "정상 (0)"
-    total_delta += s
-    details.append(("10. MFI (자금 유입)", f"{val:.1f}", txt))
-
-    final_score = base_score + total_delta
-    # 0 ~ 100 클리핑
-    final_score = max(0, min(100, final_score))
-
+    total_delta += s; details.append(("10. MFI (자금 유입)", f"{val:.1f}", txt))
+    final_score = max(0, min(100, base_score + total_delta))
     return final_score, details
 
-if st.sidebar.button("분석 실행"):
-    with st.spinner("데이터를 수집하고 10개 지표를 분석 중입니다..."):
+def get_status_info(score):
+    if score >= 75: return "🚨 극도의 과열 (Extreme Overheat)", "#FF4B4B"
+    elif score >= 60: return "⚠️ 과열 주의 (Overheated)", "#FFA500"
+    elif score >= 40: return "🟢 시장 정상/안정 (Neutral)", "#00FF00"
+    elif score >= 25: return "❄️ 침체/과매도 (Cool)", "#1E90FF"
+    else: return "🥶 극도의 공포/침체 (Extreme Fear)", "#8A2BE2"
+
+# === 자동 분석 실행 ===
+symbol = ""
+if market_type == "코스피 (KOSPI)":
+    symbol = "KS11"
+elif market_type == "코스닥 (KOSDAQ)":
+    symbol = "KQ11"
+elif market_type == "다우 (Dow Jones)":
+    symbol = "DJI"
+elif market_type == "S&P 500":
+    symbol = "US500"
+elif market_type == "나스닥 (NASDAQ)":
+    symbol = "IXIC"
+else:
+    symbol = target_ticker
+
+if symbol:
+    with st.spinner("데이터 수집 및 시계열 분석 중..."):
         try:
-            start_date_obj = target_date - timedelta(days=365) # 1년치 데이터
-
-            # 데이터 로드
-            if market_type == "코스피 (KOSPI)":
-                symbol = "KS11"
-            elif market_type == "코스닥 (KOSDAQ)":
-                symbol = "KQ11"
-            elif market_type == "다우 (Dow Jones)":
-                symbol = "DJI"
-            elif market_type == "S&P 500":
-                symbol = "US500"
-            elif market_type == "나스닥 (NASDAQ)":
-                symbol = "IXIC"
-            else:
-                symbol = target_ticker
-
-            df_price = fdr.DataReader(symbol, start_date_obj, target_date)
+            start_date_obj = target_date - timedelta(days=365)
+            df_price = fdr.DataReader(symbol, start_date_obj, datetime.today())
             
             if df_price.empty:
-                st.error("해당 기간의 주가 데이터가 없거나 잘못된 종목 코드입니다.")
+                st.error("해당 기간의 주가 데이터가 없거나 잘못된 종목 코드/티커입니다.")
             else:
-                # 10개 지표 계산
                 df_price = calc_technical_indicators(df_price)
                 
-                # 가장 마지막 행 추출 (기준일)
-                latest_data = df_price.iloc[-1]
+                # 타겟 데이터(기준일)와 현재 데이터 분리 추출
+                target_df = df_price.loc[:pd.to_datetime(target_date)]
                 
-                # 스코어 계산
-                score, details = evaluate_overheat(latest_data)
-
-                # 온도계 방식 상태 판별 (50점 정상 기준)
-                if score >= 75:
-                    status = "🚨 극도의 과열 (Extreme Overheat)"
-                    color = "#FF4B4B"
-                elif score >= 60:
-                    status = "⚠️ 과열 주의 (Overheated)"
-                    color = "#FFA500"
-                elif score >= 40:
-                    status = "🟢 시장 정상/안정 (Neutral)"
-                    color = "#00FF00"
-                elif score >= 25:
-                    status = "❄️ 침체/과매도 (Cool)"
-                    color = "#1E90FF"
+                if target_df.empty:
+                    st.error("기준 일자에 해당하는 과거 데이터가 부족합니다. 더 최근 날짜를 선택해주세요.")
                 else:
-                    status = "🥶 극도의 공포/침체 (Extreme Fear)"
-                    color = "#8A2BE2"
-
-                # 화면 출력
-                st.markdown(f"### 분석 결과: {market_type} {'('+target_ticker+')' if market_type == '개별 종목' else ''}")
-                st.markdown(f"**기준일:** {target_date.strftime('%Y-%m-%d')}")
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("종합 과열 스코어", f"{score} / 100")
-                with col2:
-                    st.markdown(f"<h3 style='color: {color};'>{status}</h3>", unsafe_allow_html=True)
-                
-                st.divider()
-
-                st.subheader("📊 10대 핵심 과열 지표 세부 현황")
-                details_df = pd.DataFrame(details, columns=["평가 지표 (Indicator)", "현재 상태 및 임계치 기준", "부여된 가점"])
-                st.table(details_df)
-                
-                st.divider()
-                st.subheader("📈 최근 1년 주가 추이 (참고용)")
-                st.line_chart(df_price['Close'])
+                    target_data = target_df.iloc[-1]
+                    current_data = df_price.iloc[-1]
+                    
+                    # 스코어 계산
+                    target_score, target_details = evaluate_overheat(target_data)
+                    current_score, current_details = evaluate_overheat(current_data)
+                    
+                    # 상태 판별
+                    t_status, t_color = get_status_info(target_score)
+                    c_status, c_color = get_status_info(current_score)
+                    
+                    # 상세 테이블 병합
+                    merged_details = []
+                    for t_det, c_det in zip(target_details, current_details):
+                        merged_details.append({
+                            "분석 지표": t_det[0],
+                            f"기준일 ({target_date.strftime('%Y-%m-%d')})": f"{t_det[1]}  [{t_det[2]}]",
+                            f"현재일 ({datetime.today().strftime('%Y-%m-%d')})": f"{c_det[1]}  [{c_det[2]}]"
+                        })
+                    df_merged = pd.DataFrame(merged_details)
+                    
+                    # 화면 출력
+                    st.markdown(f"### 🔍 분석 결과: {market_type} {'('+target_ticker+')' if market_type == '개별 종목' else ''}")
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown(f"#### 📅 기준일 당시 ({target_date.strftime('%Y-%m-%d')})")
+                        st.markdown(f"<h1 style='color: {t_color};'>{target_score} / 100</h1>", unsafe_allow_html=True)
+                        st.markdown(f"**상태:** {t_status}")
+                    
+                    with col2:
+                        st.markdown(f"#### 🚀 현재 시점 ({datetime.today().strftime('%Y-%m-%d')})")
+                        st.markdown(f"<h1 style='color: {c_color};'>{current_score} / 100</h1>", unsafe_allow_html=True)
+                        st.markdown(f"**상태:** {c_status}")
+                    
+                    st.markdown("---")
+                    st.markdown("### 📊 상세 지표 타임라인 비교")
+                    st.table(df_merged)
+                    
+                    st.divider()
+                    st.subheader("📈 최근 1년 주가 추이 (참고용)")
+                    st.line_chart(df_price['Close'])
 
         except Exception as e:
             st.error(f"분석 중 오류가 발생했습니다: {e}")
