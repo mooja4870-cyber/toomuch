@@ -1,5 +1,16 @@
 # Version History
 
+## v1.8.0
+
+Date: 2026-07-15
+
+### 변경 내용
+* Streamlit 앱 전체 배경에 1.5cm 간격의 가로/세로 격자 무늬(옅은 회색 라인) 추가하여 전문가적인 UI 느낌 강화
+
+### 수정 파일
+* overheat_analyzer.py
+* ver.md
+
 ## v1.7.0
 
 Date: 2026-07-14

@@ -7,6 +7,18 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="한국 주식시장 과열 판별기", page_icon="🔥", layout="wide")
 
+st.markdown("""
+<style>
+    .stApp {
+        background-image: 
+            linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+        background-size: 1.5cm 1.5cm, 1.5cm 1.5cm;
+        background-color: #0e1117;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 @st.cache_data(ttl=86400)
 def get_stock_list(region):
     if region == "국장 (한국)":
