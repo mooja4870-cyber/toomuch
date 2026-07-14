@@ -3,6 +3,7 @@ import FinanceDataReader as fdr
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
+import plotly.graph_objects as go
 
 st.set_page_config(page_title="한국 주식시장 과열 판별기", page_icon="🔥", layout="wide")
 
@@ -289,8 +290,49 @@ if symbol:
                     st.table(df_merged)
                     
                     st.divider()
-                    st.subheader("📈 최근 1년 주가 추이 (참고용)")
-                    st.line_chart(df_price['Close'])
-
+                    st.subheader("📈 최근 1년 주가 추이 및 시장 온도 히트맵")
+                    
+                    # 1년치(전체) 데이터에 대해 일별 과열 스코어 및 색상 산출
+                    colors = []
+                    for idx, row in df_price.iterrows():
+                        s, _ = evaluate_overheat(row)
+                        _, c = get_status_info(s)
+                        colors.append(c)
+                    
+                    fig = go.Figure()
+                    min_val = df_price['Close'].min() * 0.95
+                    max_val = df_price['Close'].max() * 1.05
+                    
+                    # 1. 배경 색상 띠 (Bar 차트로 높이를 전체 영역으로 설정)
+                    fig.add_trace(go.Bar(
+                        x=df_price.index,
+                        y=[max_val - min_val] * len(df_price),
+                        base=min_val,
+                        marker_color=colors,
+                        opacity=0.25,
+                        marker_line_width=0,
+                        hoverinfo='none',
+                        showlegend=False
+                    ))
+                    
+                    # 2. 주가 선 차트 오버레이
+                    fig.add_trace(go.Scatter(
+                        x=df_price.index,
+                        y=df_price['Close'],
+                        mode='lines',
+                        line=dict(color='white', width=2),
+                        name='종가'
+                    ))
+                    
+                    fig.update_layout(
+                        yaxis=dict(range=[min_val, max_val], title="Price"),
+                        xaxis=dict(title="Date"),
+                        barmode='overlay',
+                        margin=dict(l=0, r=0, t=10, b=0),
+                        template="plotly_dark",
+                        hovermode="x unified"
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
         except Exception as e:
             st.error(f"분석 중 오류가 발생했습니다: {e}")
