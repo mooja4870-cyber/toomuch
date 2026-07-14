@@ -84,6 +84,7 @@ def evaluate_overheat(row):
     val = row['RSI']
     if val >= 75: s = 10; txt = "극도 과열"
     elif val >= 70: s = 7; txt = "과열 징후"
+    elif val <= 30: s = 0; txt = "침체/과매도"
     else: s = 0; txt = "정상"
     score += s
     details.append(("1. RSI (14일)", f"{val:.1f} ({txt})", s))
@@ -92,6 +93,7 @@ def evaluate_overheat(row):
     val = row['Disp20'] * 100
     if val >= 115: s = 10; txt = "단기 극도 과열"
     elif val >= 110: s = 7; txt = "단기 과열"
+    elif val <= 90: s = 0; txt = "단기 과매도"
     else: s = 0; txt = "정상"
     score += s
     details.append(("2. 20일 이격도", f"{val:.1f}% ({txt})", s))
@@ -100,6 +102,7 @@ def evaluate_overheat(row):
     val = row['Disp60'] * 100
     if val >= 120: s = 10; txt = "중기 극도 과열"
     elif val >= 115: s = 7; txt = "중기 과열"
+    elif val <= 85: s = 0; txt = "중기 침체"
     else: s = 0; txt = "정상"
     score += s
     details.append(("3. 60일 이격도", f"{val:.1f}% ({txt})", s))
@@ -108,6 +111,7 @@ def evaluate_overheat(row):
     val = row['Disp120'] * 100
     if val >= 130: s = 10; txt = "장기 극도 과열"
     elif val >= 120: s = 7; txt = "장기 과열"
+    elif val <= 80: s = 0; txt = "장기 침체"
     else: s = 0; txt = "정상"
     score += s
     details.append(("4. 120일 이격도", f"{val:.1f}% ({txt})", s))
@@ -116,6 +120,7 @@ def evaluate_overheat(row):
     val = row['Vol_Ratio']
     if val >= 3.0: s = 10; txt = "거래량 폭증"
     elif val >= 2.0: s = 7; txt = "거래량 급증"
+    elif val <= 0.5: s = 0; txt = "거래량 극감 (소외)"
     else: s = 0; txt = "정상"
     score += s
     details.append(("5. 거래량 급증", f"20일 평균의 {val:.1f}배 ({txt})", s))
@@ -124,6 +129,7 @@ def evaluate_overheat(row):
     val = row['BB_pb']
     if val >= 1.0: s = 10; txt = "상단 밴드 이탈 (과열)"
     elif val >= 0.8: s = 5; txt = "상단 밴드 근접"
+    elif val <= 0.0: s = 0; txt = "하단 밴드 이탈 (과매도)"
     else: s = 0; txt = "정상"
     score += s
     details.append(("6. 볼린저 밴드 %b", f"{val:.2f} ({txt})", s))
@@ -132,6 +138,7 @@ def evaluate_overheat(row):
     val = row['MACD_Hist']
     if val > 0 and val > row['MACD']: s = 10; txt = "강한 상승 확장세"
     elif val > 0: s = 5; txt = "상승세"
+    elif val < 0 and val < row['MACD']: s = 0; txt = "강한 하락세 (침체)"
     else: s = 0; txt = "정상"
     score += s
     details.append(("7. MACD 히스토그램", f"{val:.2f} ({txt})", s))
@@ -140,6 +147,7 @@ def evaluate_overheat(row):
     val = row['Stoch_K']
     if val >= 85: s = 10; txt = "극도 과매수"
     elif val >= 80: s = 7; txt = "과매수 징후"
+    elif val <= 20: s = 0; txt = "과매도 구간"
     else: s = 0; txt = "정상"
     score += s
     details.append(("8. 스토캐스틱 %K", f"{val:.1f} ({txt})", s))
@@ -148,6 +156,7 @@ def evaluate_overheat(row):
     val = row['Will_R']
     if val >= -10: s = 10; txt = "극도 과매수"
     elif val >= -20: s = 7; txt = "과매수 징후"
+    elif val <= -80: s = 0; txt = "과매도 구간"
     else: s = 0; txt = "정상"
     score += s
     details.append(("9. Williams %R", f"{val:.1f} ({txt})", s))
@@ -156,6 +165,7 @@ def evaluate_overheat(row):
     val = row['MFI']
     if val >= 80: s = 10; txt = "자금 유입 과열"
     elif val >= 75: s = 7; txt = "자금 유입 강함"
+    elif val <= 25: s = 0; txt = "자금 유출 심각 (과매도)"
     else: s = 0; txt = "정상"
     score += s
     details.append(("10. MFI (자금 유입)", f"{val:.1f} ({txt})", s))
