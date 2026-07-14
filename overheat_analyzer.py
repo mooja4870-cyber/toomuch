@@ -9,7 +9,10 @@ st.set_page_config(page_title="한국 주식시장 과열 판별기", page_icon=
 @st.cache_data(ttl=86400)
 def get_stock_list(region):
     if region == "국장 (한국)":
-        return fdr.StockListing('KRX')
+        df = fdr.StockListing('KRX')
+        if 'Code' in df.columns and 'Symbol' not in df.columns:
+            df = df.rename(columns={'Code': 'Symbol'})
+        return df
     else:
         df_nasdaq = fdr.StockListing('NASDAQ')
         df_nyse = fdr.StockListing('NYSE')
