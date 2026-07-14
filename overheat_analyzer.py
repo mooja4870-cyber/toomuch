@@ -14,11 +14,17 @@ st.markdown("""
 
 # 사이드바 설정
 st.sidebar.header("분석 설정")
-market_type = st.sidebar.radio("대상 선택", ["코스피 (KOSPI)", "코스닥 (KOSDAQ)", "개별 종목"])
+region = st.sidebar.radio("시장 범주", ["국장 (한국)", "미장 (미국)"])
 
 target_ticker = ""
-if market_type == "개별 종목":
-    target_ticker = st.sidebar.text_input("종목 코드 (예: 삼성전자 -> 005930)", "005930")
+if region == "국장 (한국)":
+    market_type = st.sidebar.radio("대상 선택", ["코스피 (KOSPI)", "코스닥 (KOSDAQ)", "개별 종목"])
+    if market_type == "개별 종목":
+        target_ticker = st.sidebar.text_input("종목 코드 (예: 삼성전자 -> 005930)", "005930")
+else:
+    market_type = st.sidebar.radio("대상 선택", ["다우 (Dow Jones)", "S&P 500", "나스닥 (NASDAQ)", "개별 종목"])
+    if market_type == "개별 종목":
+        target_ticker = st.sidebar.text_input("종목 티커 (예: 애플 -> AAPL, 테슬라 -> TSLA)", "AAPL")
 
 target_date = st.sidebar.date_input("기준 일자", datetime.today())
 
@@ -197,6 +203,12 @@ if st.sidebar.button("분석 실행"):
                 symbol = "KS11"
             elif market_type == "코스닥 (KOSDAQ)":
                 symbol = "KQ11"
+            elif market_type == "다우 (Dow Jones)":
+                symbol = "DJI"
+            elif market_type == "S&P 500":
+                symbol = "US500"
+            elif market_type == "나스닥 (NASDAQ)":
+                symbol = "IXIC"
             else:
                 symbol = target_ticker
 
