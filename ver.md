@@ -1,5 +1,16 @@
 # Version History
 
+## v1.2.0
+
+Date: 2026-07-14
+
+### 변경 내용
+* 과열 지표 10개(RSI, 이격도 20/60/120, 거래량, 볼린저 밴드, MACD, Stochastic, Williams %R, MFI)로 확장 구현
+* 신용잔고 등 외부 API 통신 불안정성 해결을 위해 OHLCV 기반 핵심 지표 10개로 100점 만점 알고리즘 재설계
+
+### 수정 파일
+* overheat_analyzer.py
+
 ## v1.1.0
 
 Date: 2026-07-14

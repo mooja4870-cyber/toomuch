@@ -7,7 +7,10 @@ from datetime import datetime, timedelta
 st.set_page_config(page_title="한국 주식시장 과열 판별기", page_icon="🔥", layout="wide")
 
 st.title("🔥 코스피/코스닥 및 개별 종목 과열 판별기")
-st.markdown("특정 시점을 기준으로 주식 시장 및 개별 종목의 과열 여부를 수치화하여 판별합니다.")
+st.markdown("""
+특정 시점을 기준으로 주식 시장 및 개별 종목의 과열 여부를 수치화하여 판별합니다.
+*(안정적인 실시간 수집을 위해 신용잔고 등 외부 의존적인 API 대신, 가격/수급 변동성을 가장 빠르고 정확하게 반영하는 10대 핵심 지표를 사용합니다.)*
+""")
 
 # 사이드바 설정
 st.sidebar.header("분석 설정")
@@ -19,67 +22,148 @@ if market_type == "개별 종목":
 
 target_date = st.sidebar.date_input("기준 일자", datetime.today())
 
-def calculate_rsi(prices, window=14):
-    delta = prices.diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
+def calc_technical_indicators(df):
+    # 1. RSI (14)
+    delta = df['Close'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
     rs = gain / loss
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
+    df['RSI'] = 100 - (100 / (1 + rs))
 
-def get_overheat_score(rsi_val, disparity_60, disparity_120, vol_ratio):
+    # 2,3,4. 이동평균선 및 이격도 (20, 60, 120)
+    df['MA20'] = df['Close'].rolling(20).mean()
+    df['MA60'] = df['Close'].rolling(60).mean()
+    df['MA120'] = df['Close'].rolling(120).mean()
+    df['Disp20'] = df['Close'] / df['MA20']
+    df['Disp60'] = df['Close'] / df['MA60']
+    df['Disp120'] = df['Close'] / df['MA120']
+
+    # 5. 거래량 비율 (20일 평균 대비)
+    df['Vol_MA20'] = df['Volume'].rolling(20).mean()
+    df['Vol_Ratio'] = df['Volume'] / df['Vol_MA20']
+
+    # 6. 볼린저 밴드 (20, 2)
+    df['BB_std'] = df['Close'].rolling(20).std()
+    df['BB_upper'] = df['MA20'] + (df['BB_std'] * 2)
+    df['BB_lower'] = df['MA20'] - (df['BB_std'] * 2)
+    # %b (위치)
+    df['BB_pb'] = (df['Close'] - df['BB_lower']) / (df['BB_upper'] - df['BB_lower'])
+
+    # 7. MACD (12, 26, 9)
+    ema12 = df['Close'].ewm(span=12, adjust=False).mean()
+    ema26 = df['Close'].ewm(span=26, adjust=False).mean()
+    df['MACD'] = ema12 - ema26
+    df['MACD_Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+    df['MACD_Hist'] = df['MACD'] - df['MACD_Signal']
+
+    # 8. Stochastic %K (14)
+    ndays_high = df['High'].rolling(window=14).max()
+    ndays_low = df['Low'].rolling(window=14).min()
+    df['Stoch_K'] = (df['Close'] - ndays_low) / (ndays_high - ndays_low) * 100
+
+    # 9. Williams %R (14)
+    df['Will_R'] = (ndays_high - df['Close']) / (ndays_high - ndays_low) * -100
+
+    # 10. MFI (14) - Money Flow Index
+    typical_price = (df['High'] + df['Low'] + df['Close']) / 3
+    money_flow = typical_price * df['Volume']
+    positive_flow = money_flow.where(typical_price > typical_price.shift(1), 0).rolling(14).sum()
+    negative_flow = money_flow.where(typical_price < typical_price.shift(1), 0).rolling(14).sum()
+    mfi_ratio = positive_flow / negative_flow
+    df['MFI'] = 100 - (100 / (1 + mfi_ratio))
+
+    return df
+
+def evaluate_overheat(row):
     score = 0
     details = []
 
-    # 1. RSI (최대 35점)
-    if rsi_val >= 80:
-        score += 35
-        details.append(("RSI", f"{rsi_val:.1f} (80 이상: 극도 과열)", 35))
-    elif rsi_val >= 75:
-        score += 25
-        details.append(("RSI", f"{rsi_val:.1f} (75 이상: 과열 징후)", 25))
-    elif rsi_val >= 70:
-        score += 15
-        details.append(("RSI", f"{rsi_val:.1f} (70 이상: 매수세 강함)", 15))
-    else:
-        details.append(("RSI", f"{rsi_val:.1f} (정상)", 0))
+    # 각 지표당 최대 10점, 총 100점
+    
+    # 1. RSI
+    val = row['RSI']
+    if val >= 75: s = 10; txt = "극도 과열"
+    elif val >= 70: s = 7; txt = "과열 징후"
+    else: s = 0; txt = "정상"
+    score += s
+    details.append(("1. RSI (14일)", f"{val:.1f} ({txt})", s))
 
-    # 2. 이격도 (최대 35점)
-    if disparity_120 >= 1.20:
-        score += 20
-        details.append(("120일 이격도", f"{disparity_120*100:.1f}% (120% 이상: 위험)", 20))
-    elif disparity_120 >= 1.15:
-        score += 10
-        details.append(("120일 이격도", f"{disparity_120*100:.1f}% (115% 이상: 주의)", 10))
-    else:
-        details.append(("120일 이격도", f"{disparity_120*100:.1f}% (정상)", 0))
+    # 2. 20일 이격도
+    val = row['Disp20'] * 100
+    if val >= 115: s = 10; txt = "단기 극도 과열"
+    elif val >= 110: s = 7; txt = "단기 과열"
+    else: s = 0; txt = "정상"
+    score += s
+    details.append(("2. 20일 이격도", f"{val:.1f}% ({txt})", s))
 
-    if disparity_60 >= 1.15:
-        score += 15
-        details.append(("60일 이격도", f"{disparity_60*100:.1f}% (115% 이상: 위험)", 15))
-    elif disparity_60 >= 1.10:
-        score += 10
-        details.append(("60일 이격도", f"{disparity_60*100:.1f}% (110% 이상: 주의)", 10))
-    else:
-        details.append(("60일 이격도", f"{disparity_60*100:.1f}% (정상)", 0))
+    # 3. 60일 이격도
+    val = row['Disp60'] * 100
+    if val >= 120: s = 10; txt = "중기 극도 과열"
+    elif val >= 115: s = 7; txt = "중기 과열"
+    else: s = 0; txt = "정상"
+    score += s
+    details.append(("3. 60일 이격도", f"{val:.1f}% ({txt})", s))
 
-    # 3. 거래량 급증 (최대 30점)
-    if vol_ratio >= 3.0:
-        score += 30
-        details.append(("거래량 비율", f"20일 평균의 {vol_ratio:.1f}배 (3배 이상: 과열)", 30))
-    elif vol_ratio >= 2.0:
-        score += 20
-        details.append(("거래량 비율", f"20일 평균의 {vol_ratio:.1f}배 (2배 이상: 주의)", 20))
-    elif vol_ratio >= 1.5:
-        score += 10
-        details.append(("거래량 비율", f"20일 평균의 {vol_ratio:.1f}배 (1.5배 이상: 상승세)", 10))
-    else:
-        details.append(("거래량 비율", f"20일 평균의 {vol_ratio:.1f}배 (정상)", 0))
+    # 4. 120일 이격도
+    val = row['Disp120'] * 100
+    if val >= 130: s = 10; txt = "장기 극도 과열"
+    elif val >= 120: s = 7; txt = "장기 과열"
+    else: s = 0; txt = "정상"
+    score += s
+    details.append(("4. 120일 이격도", f"{val:.1f}% ({txt})", s))
+
+    # 5. 거래량 비율
+    val = row['Vol_Ratio']
+    if val >= 3.0: s = 10; txt = "거래량 폭증"
+    elif val >= 2.0: s = 7; txt = "거래량 급증"
+    else: s = 0; txt = "정상"
+    score += s
+    details.append(("5. 거래량 급증", f"20일 평균의 {val:.1f}배 ({txt})", s))
+
+    # 6. Bollinger Bands %b
+    val = row['BB_pb']
+    if val >= 1.0: s = 10; txt = "상단 밴드 이탈 (과열)"
+    elif val >= 0.8: s = 5; txt = "상단 밴드 근접"
+    else: s = 0; txt = "정상"
+    score += s
+    details.append(("6. 볼린저 밴드 %b", f"{val:.2f} ({txt})", s))
+
+    # 7. MACD Histogram
+    val = row['MACD_Hist']
+    if val > 0 and val > row['MACD']: s = 10; txt = "강한 상승 확장세"
+    elif val > 0: s = 5; txt = "상승세"
+    else: s = 0; txt = "정상"
+    score += s
+    details.append(("7. MACD 히스토그램", f"{val:.2f} ({txt})", s))
+
+    # 8. Stochastic %K
+    val = row['Stoch_K']
+    if val >= 85: s = 10; txt = "극도 과매수"
+    elif val >= 80: s = 7; txt = "과매수 징후"
+    else: s = 0; txt = "정상"
+    score += s
+    details.append(("8. 스토캐스틱 %K", f"{val:.1f} ({txt})", s))
+
+    # 9. Williams %R
+    val = row['Will_R']
+    if val >= -10: s = 10; txt = "극도 과매수"
+    elif val >= -20: s = 7; txt = "과매수 징후"
+    else: s = 0; txt = "정상"
+    score += s
+    details.append(("9. Williams %R", f"{val:.1f} ({txt})", s))
+
+    # 10. MFI (자금 유입 지수)
+    val = row['MFI']
+    if val >= 80: s = 10; txt = "자금 유입 과열"
+    elif val >= 75: s = 7; txt = "자금 유입 강함"
+    else: s = 0; txt = "정상"
+    score += s
+    details.append(("10. MFI (자금 유입)", f"{val:.1f} ({txt})", s))
 
     return score, details
 
 if st.sidebar.button("분석 실행"):
-    with st.spinner("데이터를 수집하고 분석 중입니다..."):
+    with st.spinner("데이터를 수집하고 10개 지표를 분석 중입니다..."):
         try:
             start_date_obj = target_date - timedelta(days=365) # 1년치 데이터
 
@@ -96,34 +180,23 @@ if st.sidebar.button("분석 실행"):
             if df_price.empty:
                 st.error("해당 기간의 주가 데이터가 없거나 잘못된 종목 코드입니다.")
             else:
-                current_price = df_price['Close'].iloc[-1]
+                # 10개 지표 계산
+                df_price = calc_technical_indicators(df_price)
                 
-                # 기술적 지표 계산
-                df_price['RSI_14'] = calculate_rsi(df_price['Close'])
-                df_price['MA_20'] = df_price['Close'].rolling(window=20).mean()
-                df_price['MA_60'] = df_price['Close'].rolling(window=60).mean()
-                df_price['MA_120'] = df_price['Close'].rolling(window=120).mean()
-                df_price['Vol_MA_20'] = df_price['Volume'].rolling(window=20).mean()
-
-                current_rsi = df_price['RSI_14'].iloc[-1]
-                disparity_60 = current_price / df_price['MA_60'].iloc[-1] if not pd.isna(df_price['MA_60'].iloc[-1]) else 1.0
-                disparity_120 = current_price / df_price['MA_120'].iloc[-1] if not pd.isna(df_price['MA_120'].iloc[-1]) else 1.0
+                # 가장 마지막 행 추출 (기준일)
+                latest_data = df_price.iloc[-1]
                 
-                current_vol = df_price['Volume'].iloc[-1]
-                avg_vol = df_price['Vol_MA_20'].iloc[-1]
-                vol_ratio = current_vol / avg_vol if avg_vol > 0 and not pd.isna(avg_vol) else 1.0
-
                 # 스코어 계산
-                score, details = get_overheat_score(current_rsi, disparity_60, disparity_120, vol_ratio)
+                score, details = evaluate_overheat(latest_data)
 
-                # 상태 판별
-                if score >= 76:
+                # 상태 판별 (100점 만점 기준 보정)
+                if score >= 75:
                     status = "🚨 극도의 과열 (Extreme Overheat)"
                     color = "#FF4B4B"
-                elif score >= 51:
+                elif score >= 50:
                     status = "⚠️ 과열 주의 (Overheated)"
                     color = "#FFA500"
-                elif score >= 31:
+                elif score >= 30:
                     status = "🟢 정상 (Normal)"
                     color = "#00FF00"
                 else:
@@ -136,14 +209,14 @@ if st.sidebar.button("분석 실행"):
                 
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("과열 스코어", f"{score} / 100")
+                    st.metric("종합 과열 스코어", f"{score} / 100")
                 with col2:
                     st.markdown(f"<h3 style='color: {color};'>{status}</h3>", unsafe_allow_html=True)
                 
                 st.divider()
 
-                st.subheader("📊 과열 지표 세부 현황")
-                details_df = pd.DataFrame(details, columns=["지표", "현재 상태 및 기준", "부여된 점수"])
+                st.subheader("📊 10대 핵심 과열 지표 세부 현황")
+                details_df = pd.DataFrame(details, columns=["평가 지표 (Indicator)", "현재 상태 및 임계치 기준", "부여된 가점"])
                 st.table(details_df)
                 
                 st.divider()
