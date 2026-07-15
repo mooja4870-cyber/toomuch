@@ -249,7 +249,10 @@ if symbol:
     with st.spinner("데이터 수집 및 시계열 분석 중..."):
         try:
             period_val = st.session_state.get("chart_period", "1년")
-            if period_val == "1년": days = 365
+            if period_val == "1개월": days = 30
+            elif period_val == "3개월": days = 90
+            elif period_val == "6개월": days = 180
+            elif period_val == "1년": days = 365
             elif period_val == "3년": days = 365 * 3
             elif period_val == "5년": days = 365 * 5
             elif period_val == "10년": days = 365 * 10
@@ -314,7 +317,7 @@ if symbol:
                     with col_title:
                         st.subheader("📈 주가 추이 및 시장 온도 히트맵")
                     with col_period:
-                        st.selectbox("기간 선택", ["1년", "3년", "5년", "10년", "최대"], key="chart_period", label_visibility="collapsed")
+                        st.selectbox("기간 선택", ["1개월", "3개월", "6개월", "1년", "3년", "5년", "10년", "최대"], index=3, key="chart_period", label_visibility="collapsed")
                     
                     # 전체 데이터에 대해 일별 과열 스코어 및 색상 산출
                     colors = []
