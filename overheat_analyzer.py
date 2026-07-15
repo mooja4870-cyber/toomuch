@@ -248,7 +248,14 @@ else:
 if symbol:
     with st.spinner("데이터 수집 및 시계열 분석 중..."):
         try:
-            start_date_obj = target_date - timedelta(days=365)
+            period_val = st.session_state.get("chart_period", "1년")
+            if period_val == "1년": days = 365
+            elif period_val == "3년": days = 365 * 3
+            elif period_val == "5년": days = 365 * 5
+            elif period_val == "10년": days = 365 * 10
+            else: days = 365 * 50 # 최대
+            
+            start_date_obj = target_date - timedelta(days=days)
             df_price = fdr.DataReader(symbol, start_date_obj, datetime.today())
             
             if df_price.empty:
@@ -302,9 +309,14 @@ if symbol:
                     st.table(df_merged)
                     
                     st.divider()
-                    st.subheader("📈 최근 1년 주가 추이 및 시장 온도 히트맵")
                     
-                    # 1년치(전체) 데이터에 대해 일별 과열 스코어 및 색상 산출
+                    col_title, col_period = st.columns([4, 1])
+                    with col_title:
+                        st.subheader("📈 주가 추이 및 시장 온도 히트맵")
+                    with col_period:
+                        st.selectbox("기간 선택", ["1년", "3년", "5년", "10년", "최대"], key="chart_period", label_visibility="collapsed")
+                    
+                    # 전체 데이터에 대해 일별 과열 스코어 및 색상 산출
                     colors = []
                     for idx, row in df_price.iterrows():
                         s, _ = evaluate_overheat(row)
