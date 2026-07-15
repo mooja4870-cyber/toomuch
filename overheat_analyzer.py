@@ -71,6 +71,12 @@ else:
                 st.sidebar.warning("검색 결과가 없습니다.")
 
 target_date = st.sidebar.date_input("기준 일자", datetime.today())
+use_macro = st.sidebar.checkbox("매크로 자금동향 포함 (신용잔고/예탁금)", value=True)
+macro_df = None
+if use_macro:
+    from market_scraper import fetch_macro_funds_data
+    with st.spinner("매크로 자금 동향을 가져오는 중..."):
+        macro_df = fetch_macro_funds_data(pages=5)
 
 def calc_technical_indicators(df):
     # 1. RSI (14)
@@ -124,7 +130,7 @@ def calc_technical_indicators(df):
 
     return df
 
-def evaluate_overheat(row):
+def evaluate_overheat(row, use_macro=False, macro_df=None):
     base_score = 50  # 중심값 (정상 상태 = 50점)
     details = []
     total_delta = 0
@@ -220,8 +226,21 @@ def evaluate_overheat(row):
     elif val <= 25: s = -3; txt = "자금 유출 지속 (-3)"
     else: s = 0; txt = "정상 (0)"
     total_delta += s; details.append(("10. MFI (자금 유입)", f"{val:.1f}", txt))
-    final_score = max(0, min(100, base_score + total_delta))
-    return final_score, details
+    
+    max_delta = 50
+    if use_macro and macro_df is not None and not macro_df.empty:
+        # Check if macro_df has data up to the current row's date
+        row_date = pd.to_datetime(row.name)
+        sliced_macro = macro_df[macro_df['날짜'] <= row_date]
+        if not sliced_macro.empty and len(sliced_macro) >= 5:
+            from market_scraper import evaluate_macro_funds
+            m_delta, m_details = evaluate_macro_funds(sliced_macro)
+            total_delta += m_delta
+            details.extend(m_details)
+            max_delta = 60
+            
+    final_score = max(0, min(100, base_score + (total_delta / max_delta * 50)))
+    return round(final_score), details
 
 def get_status_info(score):
     if score >= 75: return "🚨 극도의 과열 (Extreme Overheat)", "#FF4B4B"
@@ -276,8 +295,8 @@ if symbol:
                     current_data = df_price.iloc[-1]
                     
                     # 스코어 계산
-                    target_score, target_details = evaluate_overheat(target_data)
-                    current_score, current_details = evaluate_overheat(current_data)
+                    target_score, target_details = evaluate_overheat(target_data, use_macro, macro_df)
+                    current_score, current_details = evaluate_overheat(current_data, use_macro, macro_df)
                     
                     # 상태 판별
                     t_status, t_color = get_status_info(target_score)
@@ -322,7 +341,7 @@ if symbol:
                     # 전체 데이터에 대해 일별 과열 스코어 및 색상 산출
                     colors = []
                     for idx, row in df_price.iterrows():
-                        s, _ = evaluate_overheat(row)
+                        s, _ = evaluate_overheat(row, use_macro, macro_df)
                         _, c = get_status_info(s)
                         colors.append(c)
                     
@@ -367,6 +386,6 @@ if symbol:
                         hovermode="x unified"
                     )
                     
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
         except Exception as e:
             st.error(f"분석 중 오류가 발생했습니다: {e}")
