@@ -353,7 +353,7 @@ if symbol:
                     
                     fig.update_layout(
                         yaxis=dict(range=[min_val, max_val], title="Price"),
-                        xaxis=dict(title="Date"),
+                        xaxis=dict(title="Date", type="category"),
                         barmode='overlay',
                         margin=dict(l=0, r=0, t=10, b=0),
                         template="plotly_dark",
