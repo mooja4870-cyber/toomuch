@@ -351,9 +351,16 @@ if symbol:
                         name='종가'
                     ))
                     
+                    # 주말 및 휴장일(공백) 제거를 위한 누락 날짜 계산
+                    all_dates = pd.date_range(start=df_price.index.min(), end=df_price.index.max())
+                    missing_dates = all_dates.difference(df_price.index).strftime("%Y-%m-%d").tolist()
+
                     fig.update_layout(
                         yaxis=dict(range=[min_val, max_val], title="Price"),
-                        xaxis=dict(title="Date", type="category"),
+                        xaxis=dict(
+                            title="Date", 
+                            rangebreaks=[dict(values=missing_dates)]
+                        ),
                         barmode='overlay',
                         margin=dict(l=0, r=0, t=10, b=0),
                         template="plotly_dark",
