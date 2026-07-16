@@ -16,27 +16,13 @@ st.markdown("""
         background-size: 1.5cm 1.5cm, 1.5cm 1.5cm;
         background-color: #0e1117;
     }
-    .blink-bg-wrapper {
-        position: relative;
-        display: inline-block;
-        padding: 4px 8px;
-        z-index: 1;
-        border-radius: 6px;
-        background-color: rgba(255, 75, 75, 0.15);
+    path[style*="rgba(255, 20, 147, 0.99)"] {
+        animation: chart-line-blink 1s infinite;
     }
-    .blink-bg-wrapper::after {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background-color: rgba(255, 75, 75, 0.5);
-        border-radius: 6px;
-        z-index: -1;
-        animation: radar-pulse 1s infinite ease-out;
-    }
-    @keyframes radar-pulse {
-        0% { transform: scale(1); opacity: 0.8; }
-        50% { transform: scale(3); opacity: 0; }
-        100% { transform: scale(1); opacity: 0; }
+    @keyframes chart-line-blink {
+        0% { opacity: 1; stroke-width: 3px; }
+        50% { opacity: 0.2; stroke-width: 9px; }
+        100% { opacity: 1; stroke-width: 3px; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -342,10 +328,7 @@ if symbol:
                     
                     col1, col2 = st.columns(2)
                     with col1:
-                        if target_date != datetime.today().date():
-                            st.markdown(f"<h4 class='blink-bg-wrapper' style='margin-top:0; margin-bottom:1rem;'>📅 기준일 당시 ({target_date_str})</h4>", unsafe_allow_html=True)
-                        else:
-                            st.markdown(f"#### 📅 기준일 당시 ({target_date_str})")
+                        st.markdown(f"#### 📅 기준일 당시 ({target_date_str})")
                         st.markdown(f"<h1 style='color: {t_color};'>{target_score} / 100</h1>", unsafe_allow_html=True)
                         st.markdown(f"**상태:** {t_status}")
                     
@@ -397,6 +380,10 @@ if symbol:
                         line=dict(color='white', width=2),
                         name='종가'
                     ))
+                    
+                    # 3. 과거 기준일 선택 시 차트에 세로 깜빡임 선 추가
+                    if target_date != datetime.today().date():
+                        fig.add_vline(x=target_date.strftime("%Y-%m-%d"), line_width=3, line_dash="dash", line_color="rgba(255, 20, 147, 0.99)")
                     
                     # 주말 및 휴장일(공백) 제거를 위한 누락 날짜 계산
                     all_dates = pd.date_range(start=df_price.index.min(), end=df_price.index.max())
