@@ -304,11 +304,14 @@ if symbol:
                     
                     # 상세 테이블 병합
                     merged_details = []
+                    weekdays = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일']
+                    target_date_str = f"{target_date.strftime('%Y-%m-%d')} {weekdays[target_date.weekday()]}"
+                    current_date_str = f"{datetime.today().strftime('%Y-%m-%d')} {weekdays[datetime.today().weekday()]}"
                     for t_det, c_det in zip(target_details, current_details):
                         merged_details.append({
                             "분석 지표": t_det[0],
-                            f"기준일 ({target_date.strftime('%Y-%m-%d')})": f"{t_det[1]}  [{t_det[2]}]",
-                            f"현재일 ({datetime.today().strftime('%Y-%m-%d')})": f"{c_det[1]}  [{c_det[2]}]"
+                            f"기준일 ({target_date_str})": f"{t_det[1]}  [{t_det[2]}]",
+                            f"현재일 ({current_date_str})": f"{c_det[1]}  [{c_det[2]}]"
                         })
                     df_merged = pd.DataFrame(merged_details)
                     
@@ -317,12 +320,12 @@ if symbol:
                     
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.markdown(f"#### 📅 기준일 당시 ({target_date.strftime('%Y-%m-%d')})")
+                        st.markdown(f"#### 📅 기준일 당시 ({target_date_str})")
                         st.markdown(f"<h1 style='color: {t_color};'>{target_score} / 100</h1>", unsafe_allow_html=True)
                         st.markdown(f"**상태:** {t_status}")
                     
                     with col2:
-                        st.markdown(f"#### 🚀 현재 시점 ({datetime.today().strftime('%Y-%m-%d')})")
+                        st.markdown(f"#### 🚀 현재 시점 ({current_date_str})")
                         st.markdown(f"<h1 style='color: {c_color};'>{current_score} / 100</h1>", unsafe_allow_html=True)
                         st.markdown(f"**상태:** {c_status}")
                     
