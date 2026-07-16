@@ -1,5 +1,21 @@
 # Version History
 
+## v1.11.0
+
+Date: 2026-07-16
+
+### 변경 내용
+* 시장 과열/침체 판단의 정확도를 높이기 위해 5가지 거시(매크로) 지표 추가 수집 및 스코어링 반영
+  - 추가 지표: 예탁금 대비 신용비율, 코스피 거래량 회전율, 코스피 역사적 변동성(V-KOSPI 대안), 코스피 RSI, 원/달러 환율
+* `FinanceDataReader`를 활용하여 KOSPI 지수 및 USD/KRW 환율 과거 100일 치 데이터를 동적 병합(Outer Join & Forward Fill)하도록 데이터 수집 파이프라인 고도화
+* 총 7개의 매크로 지표 개수에 비례하여 동적으로 과열도(max_delta)를 스케일링하는 정규화 로직 적용
+
+### 수정 파일
+* market_scraper.py
+* overheat_analyzer.py
+* ver.md
+
+
 ## v1.10.1
 
 Date: 2026-07-16

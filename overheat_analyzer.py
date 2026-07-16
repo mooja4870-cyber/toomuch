@@ -237,7 +237,7 @@ def evaluate_overheat(row, use_macro=False, macro_df=None):
             m_delta, m_details = evaluate_macro_funds(sliced_macro)
             total_delta += m_delta
             details.extend(m_details)
-            max_delta = 60
+            max_delta = 50 + (len(m_details) * 5)
             
     final_score = max(0, min(100, base_score + (total_delta / max_delta * 50)))
     return round(final_score), details
