@@ -1,5 +1,19 @@
 # Version History
 
+## v1.12.0
+
+Date: 2026-07-20
+
+### 변경 내용
+* 과열 판별기 차트에 거래량(Volume) 2단 서브플롯 추가
+* 상단(78%) 주가 및 과열 온도 히트맵, 하단(22%) 거래량 차트로 분리 구성 및 날짜 X축 연동(`shared_xaxes=True`, `hovermode="x unified"`)
+* 거래량 바는 전일 대비 종가 상승 시 붉은색(`#FF4B4B`), 하락 시 푸른색(`#1E90FF`)으로 표시
+
+### 수정 파일
+* overheat_analyzer.py
+* ver.md
+
+
 ## v1.11.3
 
 Date: 2026-07-19

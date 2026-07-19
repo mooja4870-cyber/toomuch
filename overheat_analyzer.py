@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 st.set_page_config(page_title="한국 주식시장 과열 판별기", page_icon="🔥", layout="wide")
 
@@ -377,11 +378,17 @@ if symbol:
                         _, c = get_status_info(s)
                         colors.append(c)
                     
-                    fig = go.Figure()
+                    fig = make_subplots(
+                        rows=2,
+                        cols=1,
+                        shared_xaxes=True,
+                        vertical_spacing=0.03,
+                        row_heights=[0.78, 0.22]
+                    )
                     min_val = df_price['Close'].min() * 0.95
                     max_val = df_price['Close'].max() * 1.05
                     
-                    # 1. 배경 색상 띠 (Bar 차트로 높이를 전체 영역으로 설정)
+                    # 1. 배경 색상 띠 (Bar 차트로 높이를 전체 영역으로 설정 - Row 1)
                     fig.add_trace(go.Bar(
                         x=df_price.index,
                         y=[max_val - min_val] * len(df_price),
@@ -391,18 +398,28 @@ if symbol:
                         marker_line_width=0,
                         hoverinfo='none',
                         showlegend=False
-                    ))
+                    ), row=1, col=1)
                     
-                    # 2. 주가 선 차트 오버레이
+                    # 2. 주가 선 차트 오버레이 (Row 1)
                     fig.add_trace(go.Scatter(
                         x=df_price.index,
                         y=df_price['Close'],
                         mode='lines',
                         line=dict(color='white', width=2),
                         name='종가'
-                    ))
+                    ), row=1, col=1)
+
+                    # 3. 거래량 차트 (Row 2)
+                    vol_colors = ['#FF4B4B' if diff >= 0 else '#1E90FF' for diff in df_price['Close'].diff().fillna(0)]
+                    fig.add_trace(go.Bar(
+                        x=df_price.index,
+                        y=df_price['Volume'],
+                        marker_color=vol_colors,
+                        opacity=0.75,
+                        name='거래량'
+                    ), row=2, col=1)
                     
-                    # 3. 과거 기준일 선택 시 차트에 세로 깜빡임 선 추가
+                    # 4. 과거 기준일 선택 시 차트에 세로 깜빡임 선 추가
                     if target_date != datetime.today().date():
                         fig.add_vline(x=target_date.strftime("%Y-%m-%d"), line_width=3, line_dash="dash", line_color="rgba(255, 20, 147, 0.99)")
                     
@@ -412,10 +429,9 @@ if symbol:
 
                     fig.update_layout(
                         yaxis=dict(range=[min_val, max_val], title="Price"),
-                        xaxis=dict(
-                            title="Date", 
-                            rangebreaks=[dict(values=missing_dates)]
-                        ),
+                        yaxis2=dict(title="Volume", showgrid=False),
+                        xaxis=dict(rangebreaks=[dict(values=missing_dates)], showticklabels=False),
+                        xaxis2=dict(title="Date", rangebreaks=[dict(values=missing_dates)]),
                         barmode='overlay',
                         margin=dict(l=0, r=0, t=10, b=0),
                         template="plotly_dark",
