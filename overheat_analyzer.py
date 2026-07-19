@@ -24,7 +24,28 @@ st.markdown("""
         50% { opacity: 0.2; stroke-width: 9px; }
         100% { opacity: 1; stroke-width: 3px; }
     }
+    
+    /* 모바일 및 카카오톡 인앱 브라우저에서 사이드바 확장(열기) 버튼이 상단 헤더에 가려지지 않도록 설정 */
+    [data-testid="collapsedControl"] {
+        display: flex !important;
+        left: 15px !important;
+        top: 60px !important;
+        z-index: 999999 !important;
+        background-color: rgba(30, 34, 42, 0.9) !important;
+        border-radius: 8px !important;
+        padding: 6px !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
 </style>
+
+<script>
+    // Streamlit 기본 viewport 설정을 우회하여 모바일 핀치줌(Pinch-to-zoom)을 허용하도록 변경
+    const viewport = window.parent.document.querySelector('meta[name="viewport"]');
+    if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes');
+    }
+</script>
 """, unsafe_allow_html=True)
 
 @st.cache_data(ttl=86400)
