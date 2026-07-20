@@ -256,6 +256,11 @@ if symbol:
                                 else:
                                     with st.spinner("중딩 멘토가 열심히 분석 중이야... 🤓"):
                                         try:
+                                            import sys
+                                            user_site = "/Users/l/Library/Python/3.9/lib/python/site-packages"
+                                            if user_site not in sys.path:
+                                                sys.path.append(user_site)
+                                                
                                             import google.generativeai as genai
                                             genai.configure(api_key=api_key)
                                             model = genai.GenerativeModel("gemini-1.5-flash")

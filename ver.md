@@ -1,5 +1,15 @@
 # Version History
 
+## v1.13.5
+
+Date: 2026-07-20
+
+### 변경 내용
+* `No module named 'google.generativeai'` 에러 해결을 위해 런타임에 동적으로 `sys.path` 인젝션 코드 추가
+
+### 수정 파일
+* overheat_analyzer.py
+
 ## v1.13.4
 
 Date: 2026-07-20
