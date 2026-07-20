@@ -209,7 +209,20 @@ if symbol:
                         "🤖 [PRO 5] AI 요약 & 실시간 알림"
                     ])
                     
+                    def render_speech_bubble(text):
+                        st.markdown(
+                            f"""
+                            <div style="position: relative; background: #2E3239; border-radius: 15px; padding: 15px 25px; margin-top: 10px; margin-bottom: 25px; font-size: 22px; font-weight: 500; color: #E0E6ED; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                                <div style="position: absolute; top: -10px; left: 30px; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 10px solid #2E3239;"></div>
+                                {text}
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+
+                    
                     with tab_main:
+                        render_speech_bubble("🔥 지금 이 주식이 너무 올랐는지, 쌀 때인지 한눈에 보여주는 기본 차트야! 불타오르면 조심해!")
                         col_title, col_period = st.columns([4, 1])
                         with col_title:
                             st.subheader("📈 주가 추이 및 시장 온도 히트맵")
@@ -321,18 +334,23 @@ if symbol:
                         st.table(df_merged)
                         
                     with tab_pro1:
+                        render_speech_bubble("🕵️‍♂️ 외국인이나 기관 같은 '진짜 부자들'이 몰래 사고 있는지, 개미들한테 물량 넘기고 도망가는 중인지 잡아내는 곳이야!")
                         pf.render_pro_tab1_smart_money(df_price, target_date)
                         
                     with tab_pro2:
+                        render_speech_bubble("🔮 과거 10년 동안 지금이랑 똑같은 상황일 때, 며칠 뒤에 주가가 올랐을까 떨어졌을까? 정답지를 미리 훔쳐보는 곳!")
                         pf.render_pro_tab2_backtest(df_price, current_score)
                         
                     with tab_pro3:
+                        render_speech_bubble("💎 요즘 제일 잘나가는 대장주 친구들 중에, 아직 덜 올라서 지금 당장 사면 개꿀인 종목을 싹 다 찾아주는 스캐너야!")
                         pf.render_pro_tab3_value_chain()
                         
                     with tab_pro4:
+                        render_speech_bubble("⚡ 환율이나 금리, 공포지수 같은 으스스한 지표들을 보고, 기계들이 갑자기 주식을 확 던져버릴 폭락 위험이 있는지 경고해주는 레이더!")
                         pf.render_pro_tab4_derivatives(region)
                         
                     with tab_pro5:
+                        render_speech_bubble("🤖 복잡한 건 다 빼고 딱 3줄로 AI가 요약해주고, 위험할 때 텔레그램이나 카톡으로 '야 지금 당장 팔아!' 하고 알림 보내주는 곳이야!")
                         pf.render_pro_tab5_ai_and_alerts(target_ticker, market_type, current_score, c_status, df_price)
         except Exception as e:
             st.error(f"분석 중 오류가 발생했습니다: {e}")
