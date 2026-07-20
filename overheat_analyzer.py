@@ -35,6 +35,12 @@ st.markdown("""
         100% { opacity: 1 !important; transform: scale(1); }
     }
     
+    @keyframes button-blink {
+        0% { opacity: 1 !important; transform: scale(1); }
+        50% { opacity: 0.4 !important; transform: scale(0.98); }
+        100% { opacity: 1 !important; transform: scale(1); }
+    }
+    
     /* 모바일 및 카카오톡 인앱 브라우저에서 사이드바 확장(열기) 버튼이 상단 헤더에 가려지지 않도록 설정 */
     [data-testid="collapsedControl"] {
         display: flex !important;
@@ -240,11 +246,20 @@ if symbol:
                         "매크로 레이더: 환율, 금리, 공포지수 등을 바탕으로 폭락 위험을 경고합니다.",
                         "AI 요약 & 알림: AI 기반 3줄 요약 및 실시간 텔레그램/웹훅 알림 설정 화면입니다."
                     ];
-                    setTimeout(() => {
+                    setInterval(() => {
                         const tabs = window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
                         tabs.forEach((tab, index) => {
                             if(index < tooltips.length) {
                                 tab.title = tooltips[index];
+                            }
+                        });
+                        
+                        const buttons = window.parent.document.querySelectorAll('button p');
+                        buttons.forEach((p) => {
+                            if(p.innerText.includes('실시간 시황 분석하기')) {
+                                p.parentElement.style.animation = 'button-blink 1s infinite';
+                                p.parentElement.style.transition = 'all 0.3s ease';
+                                p.parentElement.style.border = '1px solid #ff4b4b';
                             }
                         });
                     }, 1000);
@@ -255,7 +270,7 @@ if symbol:
                         api_key = st.session_state.get("gemini_api_key", "")
                         
                         bubble_style = """
-                        <div style="position: relative; background: #2E3239; border-radius: 15px; padding: 15px 25px; margin-top: 10px; margin-bottom: 25px; font-size: 22px; font-weight: 500; color: #E0E6ED; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                        <div style="position: relative; background: #2E3239; border-radius: 15px; padding: 15px 25px; margin-top: 10px; margin-bottom: 25px; font-size: 17px; font-weight: 500; color: #E0E6ED; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                             <div style="position: absolute; top: -10px; left: 30px; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 10px solid #2E3239;"></div>
                             {text}
                         </div>
