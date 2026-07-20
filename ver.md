@@ -1,5 +1,17 @@
 # Version History
 
+## v1.12.4
+
+Date: 2026-07-20
+
+### 변경 내용
+* 지정일자 배경 깜빡임 효과(`bar-blink`) 최적화: Plotly.js SVG 렌더링 특성에 영향을 받지 않도록 고유 HEX 코드(`#fffffe`), RGB(`255, 255, 254`), stroke-width 선택자 다중 적용 (`!important` 강제 속성 부여)
+* 기준일 선택 시 오늘 날짜를 포함하여 지정일이 어디든 항상 세로 배경 막대(Row 1 및 Row 2)가 1초 간격으로 3배(`fill-opacity: 0.75`) ↔ 1배(`fill-opacity: 0.25`) 깜빡이도록 개선
+
+### 수정 파일
+* overheat_analyzer.py
+* ver.md
+
 ## v1.12.3
 
 Date: 2026-07-20

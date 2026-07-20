@@ -17,13 +17,20 @@ st.markdown("""
         background-size: 1.5cm 1.5cm, 1.5cm 1.5cm;
         background-color: #0e1117;
     }
-    path[style*="rgba(255, 255, 255, 0.01)"] {
-        animation: bar-blink 1s infinite;
+    /* Plotly SVG 렌더링 방식(RGB 분리, 헥스 코드 등)과 무관하게 깜빡임 애니메이션 100% 매칭 보장 */
+    path[style*="255, 255, 254"],
+    path[style*="rgb(255, 255, 254)"],
+    path[style*="#fffffe"],
+    .point path[style*="stroke-width: 1px"],
+    .point path[style*="stroke-width: 1.0px"],
+    .shape-path[style*="fill-opacity: 0.249"],
+    .shape-path[style*="fill-opacity: 0.25"] {
+        animation: bar-blink 1s infinite !important;
     }
     @keyframes bar-blink {
-        0% { opacity: 1; fill-opacity: 0.25; }
-        50% { opacity: 1; fill-opacity: 0.75; }
-        100% { opacity: 1; fill-opacity: 0.25; }
+        0% { opacity: 1 !important; fill-opacity: 0.25 !important; }
+        50% { opacity: 1 !important; fill-opacity: 0.75 !important; }
+        100% { opacity: 1 !important; fill-opacity: 0.25 !important; }
     }
     
     /* 모바일 및 카카오톡 인앱 브라우저에서 사이드바 확장(열기) 버튼이 상단 헤더에 가려지지 않도록 설정 */
@@ -385,8 +392,8 @@ if symbol:
                     max_val = df_price['Close'].max() * 1.05
                     
                     # 1. 배경 색상 띠 (Bar 차트로 높이를 전체 영역으로 설정 - Row 1)
-                    # 과거 기준일 선택 시 해당 날짜는 별도의 깜빡임 막대로 그리므로 기본 배경 막대에서는 투명 처리
-                    if target_date != datetime.today().date() and not target_df.empty:
+                    # 기준일 선택 시 해당 날짜는 별도의 깜빡임 막대로 그리므로 기본 배경 막대에서는 투명 처리
+                    if not target_df.empty:
                         actual_target_dt = target_df.index[-1]
                         if actual_target_dt in df_price.index:
                             target_loc = df_price.index.get_loc(actual_target_dt)
@@ -419,11 +426,12 @@ if symbol:
                         y=df_price['Volume'],
                         marker_color=vol_colors,
                         opacity=0.75,
+                        marker_line_width=0,
                         name='거래량'
                     ), row=2, col=1)
                     
-                    # 4. 과거 기준일 선택 시 지정일 위치에 세로 깜빡임 막대(Bar) 추가 (Row 1 및 Row 2)
-                    if target_date != datetime.today().date() and not target_df.empty:
+                    # 4. 기준일(target_date) 지정 위치에 세로 깜빡임 막대(Bar) 추가 (Row 1 및 Row 2)
+                    if not target_df.empty:
                         actual_target_dt = target_df.index[-1]
                         
                         # Row 1 배경 깜빡임 막대
@@ -434,7 +442,7 @@ if symbol:
                             marker=dict(
                                 color=t_color,
                                 opacity=0.25,
-                                line=dict(color="rgba(255, 255, 255, 0.01)", width=1)
+                                line=dict(color="#fffffe", width=1)
                             ),
                             opacity=1.0,
                             hoverinfo='none',
@@ -449,7 +457,7 @@ if symbol:
                             marker=dict(
                                 color=t_color,
                                 opacity=0.25,
-                                line=dict(color="rgba(255, 255, 255, 0.01)", width=1)
+                                line=dict(color="#fffffe", width=1)
                             ),
                             opacity=1.0,
                             hoverinfo='none',
