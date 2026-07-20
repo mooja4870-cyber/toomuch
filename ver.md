@@ -1,5 +1,20 @@
 # Version History
 
+## v1.13.2
+
+Date: 2026-07-20
+
+### 변경 내용
+* `Multiple elements with the same key='sidebar_region'` 에러의 근본 원인 해결: `pro_features.py`에서 `overheat_analyzer.py`를 `import`할 때 Streamlit의 특성상 메인 스크립트가 중복 실행되며 사이드바 위젯 레이아웃이 2번 렌더링되던 모듈 순환(Circular) 문제 해결
+* 과열 진단 퀀트 로직(`calc_technical_indicators`, `evaluate_overheat`, `get_status_info`)을 독립된 **`core_logic.py`** 모듈로 분리 추출
+* `overheat_analyzer.py`와 `pro_features.py`가 공통으로 `core_logic.py`를 참조하도록 아키텍처를 개선하여, Streamlit 위젯 중복 렌더링 에러를 영구적으로 차단
+
+### 수정 파일
+* core_logic.py (신규 생성)
+* overheat_analyzer.py
+* pro_features.py
+* ver.md
+
 ## v1.13.1
 
 Date: 2026-07-20

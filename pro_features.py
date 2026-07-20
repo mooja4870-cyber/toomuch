@@ -112,7 +112,7 @@ def run_score_backtest(df_price, threshold=75):
         
     # 빠른 벡터 연산을 위해 RSI 및 이격도를 이용한 간이 스코어 필터링
     # (실제 evaluate_overheat 연산을 전체 row에 돌리면 10년치 기준 약 1~2초 소요)
-    from overheat_analyzer import calc_technical_indicators, evaluate_overheat
+    from core_logic import calc_technical_indicators, evaluate_overheat
     df = calc_technical_indicators(df)
     
     events = []
@@ -274,7 +274,7 @@ def render_pro_tab3_value_chain():
             try:
                 df = fdr.DataReader(item['Symbol'], start_d)
                 if not df.empty and len(df) >= 20:
-                    from overheat_analyzer import calc_technical_indicators, evaluate_overheat, get_status_info
+                    from core_logic import calc_technical_indicators, evaluate_overheat, get_status_info
                     df = calc_technical_indicators(df)
                     score, _ = evaluate_overheat(df.iloc[-1], use_macro=False)
                     status, color = get_status_info(score)
