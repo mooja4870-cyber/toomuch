@@ -261,6 +261,10 @@ if symbol:
                                 if (btn) {
                                     btn.style.animation = 'button-blink 1s infinite';
                                     btn.style.transition = 'all 0.3s ease';
+                                    btn.style.transform = 'scale(1.33)';
+                                    btn.style.transformOrigin = 'left center';
+                                    btn.style.marginTop = '10px';
+                                    btn.style.marginBottom = '10px';
                                 }
                             }
                         });
