@@ -423,11 +423,13 @@ if symbol:
                         name='거래량'
                     ), row=2, col=1)
                     
-                    # 4. 지정일자 상단 황금색 역삼각형(▼, 폰트크기 300%) 깜빡임 마커 추가 (Row 1)
+                    # 4. 지정일자 상단 황금색 역삼각형(▼, 폰트크기 300%) 깜빡임 마커 추가 (Row 1 및 Row 2)
                     if not target_df.empty:
                         actual_target_dt = target_df.index[-1]
                         target_high = target_df.iloc[-1]['High'] if 'High' in target_df.columns else target_df.iloc[-1]['Close']
+                        target_vol = target_df.iloc[-1]['Volume']
                         
+                        # Row 1 (주가 차트) 황금색 역삼각형
                         fig.add_trace(go.Scatter(
                             x=[actual_target_dt],
                             y=[target_high],
@@ -439,6 +441,19 @@ if symbol:
                             hoverinfo='none',
                             showlegend=False
                         ), row=1, col=1)
+                        
+                        # Row 2 (거래량 차트) 황금색 역삼각형
+                        fig.add_trace(go.Scatter(
+                            x=[actual_target_dt],
+                            y=[target_vol],
+                            mode='text',
+                            text=['▼'],
+                            textfont=dict(size=36, color='#FFD700'),
+                            textposition='top center',
+                            name='지정일자_거래량',
+                            hoverinfo='none',
+                            showlegend=False
+                        ), row=2, col=1)
                     
                     # 주말 및 휴장일(공백) 제거를 위한 누락 날짜 계산
                     all_dates = pd.date_range(start=df_price.index.min(), end=df_price.index.max())
@@ -447,7 +462,7 @@ if symbol:
                     fig.update_layout(
                         height=800,  # 기존 기본값 450px 대비 약 177% 확대 (450 * 1.77 = 796.5px ≈ 800px)
                         yaxis=dict(range=[min_val, max_val], title="Price"),
-                        yaxis2=dict(title="Volume", showgrid=False),
+                        yaxis2=dict(range=[0, df_price['Volume'].max() * 1.15], title="Volume", showgrid=False),
                         xaxis=dict(rangebreaks=[dict(values=missing_dates)], showticklabels=False),
                         xaxis2=dict(title="Date", rangebreaks=[dict(values=missing_dates)]),
                         barmode='overlay',
