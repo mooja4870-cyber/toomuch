@@ -5,6 +5,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import streamlit.components.v1 as components
 import pro_features as pf
 
 st.set_page_config(page_title="한국 주식시장 과열 판별기", page_icon="🔥", layout="wide")
@@ -109,6 +110,7 @@ else:
                 st.sidebar.warning("검색 결과가 없습니다.")
 
 target_date = st.sidebar.date_input("기준 일자", datetime.today(), key="sidebar_target_date")
+st.session_state["gemini_api_key"] = st.sidebar.text_input("Gemini API Key (선택)", type="password", key="sidebar_gemini_api_key")
 use_macro = st.sidebar.checkbox("매크로 자금동향 포함 (신용잔고/예탁금)", value=True, key="sidebar_use_macro")
 macro_df = None
 if use_macro:
@@ -209,20 +211,84 @@ if symbol:
                         "🤖 [PRO 5] AI 요약 & 실시간 알림"
                     ])
                     
-                    def render_speech_bubble(text):
-                        st.markdown(
-                            f"""
-                            <div style="position: relative; background: #2E3239; border-radius: 15px; padding: 15px 25px; margin-top: 10px; margin-bottom: 25px; font-size: 22px; font-weight: 500; color: #E0E6ED; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                                <div style="position: absolute; top: -10px; left: 30px; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 10px solid #2E3239;"></div>
-                                {text}
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+                    components.html("""
+                    <script>
+                    const tooltips = [
+                        "기본 차트: 현재 주식의 과열/침체 여부를 한눈에 보여줍니다.",
+                        "스마트 머니: 외국인/기관 등 메이저 수급의 매집 또는 이탈 현황을 분석합니다.",
+                        "백테스터: 과거 동일한 조건일 때 이후 주가 변화 통계를 보여줍니다.",
+                        "밸류체인 히트맵: 현재 주도 섹터 내 저평가/과열 종목을 스캔합니다.",
+                        "매크로 레이더: 환율, 금리, 공포지수 등을 바탕으로 폭락 위험을 경고합니다.",
+                        "AI 요약 & 알림: AI 기반 3줄 요약 및 실시간 텔레그램/웹훅 알림 설정 화면입니다."
+                    ];
+                    setTimeout(() => {
+                        const tabs = window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
+                        tabs.forEach((tab, index) => {
+                            if(index < tooltips.length) {
+                                tab.title = tooltips[index];
+                            }
+                        });
+                    }, 1000);
+                    </script>
+                    """, height=0, width=0)
 
-                    
+                    def render_ai_speech_bubble(tab_id, system_context, df_data):
+                        api_key = st.session_state.get("gemini_api_key", "")
+                        
+                        bubble_style = """
+                        <div style="position: relative; background: #2E3239; border-radius: 15px; padding: 15px 25px; margin-top: 10px; margin-bottom: 25px; font-size: 22px; font-weight: 500; color: #E0E6ED; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                            <div style="position: absolute; top: -10px; left: 30px; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 10px solid #2E3239;"></div>
+                            {text}
+                        </div>
+                        """
+                        
+                        state_key = f"ai_summary_{tab_id}"
+                        if state_key not in st.session_state:
+                            if not api_key:
+                                msg = "Gemini API 키를 왼쪽 사이드바에 입력하고 아래 버튼을 누르면 실시간 시황을 재밌게 알려줄게! 🤖"
+                            else:
+                                msg = "현재 데이터를 분석할 준비가 완료됐어! 아래 버튼을 눌러줘 🚀"
+                            st.markdown(bubble_style.replace("{text}", msg), unsafe_allow_html=True)
+                            
+                            if st.button(f"🤖 {tab_id} 실시간 시황 분석하기", key=f"btn_analyze_{tab_id}"):
+                                if not api_key:
+                                    st.error("왼쪽 사이드바에 Gemini API 키를 먼저 입력해주세요!")
+                                else:
+                                    with st.spinner("중딩 멘토가 열심히 분석 중이야... 🤓"):
+                                        try:
+                                            import google.generativeai as genai
+                                            genai.configure(api_key=api_key)
+                                            model = genai.GenerativeModel("gemini-1.5-flash")
+                                            
+                                            data_context = df_data.tail(3).to_dict() if df_data is not None else "데이터 없음"
+                                            
+                                            prompt = f"""
+                                            당신은 중학생에게 주식 시황을 아주 쉽고 재미있게 설명해주는 친절한 AI 멘토입니다.
+                                            현재 당신은 '{system_context}' 탭의 역할을 맡고 있습니다.
+                                            다음 데이터를 바탕으로 현재 시장/종목 상황을 분석해주세요.
+                                            
+                                            [최근 데이터 요약]
+                                            {data_context}
+                                            
+                                            [조건]
+                                            - 말투는 친근한 반말 (중딩 멘토 느낌)
+                                            - 이 탭의 목적({system_context})에 맞게 분석 결과를 비유적으로 설명
+                                            - 가장 중요한 핵심만 2~3문장으로 아주 짧게 요약
+                                            - 이모지를 적극적으로 사용
+                                            """
+                                            resp = model.generate_content(prompt)
+                                            st.session_state[state_key] = resp.text
+                                            st.rerun()
+                                        except Exception as e:
+                                            st.error(f"오류 발생: {e}")
+                        else:
+                            st.markdown(bubble_style.replace("{text}", st.session_state[state_key]), unsafe_allow_html=True)
+                            if st.button("🔄 다시 분석하기", key=f"btn_reanalyze_{tab_id}"):
+                                del st.session_state[state_key]
+                                st.rerun()
+
                     with tab_main:
-                        render_speech_bubble("🔥 지금 이 주식이 너무 올랐는지, 쌀 때인지 한눈에 보여주는 기본 차트야! 불타오르면 조심해!")
+                        render_ai_speech_bubble("기본 과열 분석 & 차트", "현재 주식이 너무 올랐는지, 쌀 때인지 한눈에 보여주는 기본 차트 분석", df_price)
                         col_title, col_period = st.columns([4, 1])
                         with col_title:
                             st.subheader("📈 주가 추이 및 시장 온도 히트맵")
@@ -334,23 +400,23 @@ if symbol:
                         st.table(df_merged)
                         
                     with tab_pro1:
-                        render_speech_bubble("🕵️‍♂️ 외국인이나 기관 같은 '진짜 부자들'이 몰래 사고 있는지, 개미들한테 물량 넘기고 도망가는 중인지 잡아내는 곳이야!")
+                        render_ai_speech_bubble("스마트 머니 수급", "외국인이나 기관 같은 '진짜 부자들'이 몰래 사고 있는지, 개미들한테 물량 넘기고 도망가는 중인지 분석", df_price)
                         pf.render_pro_tab1_smart_money(df_price, target_date)
                         
                     with tab_pro2:
-                        render_speech_bubble("🔮 과거 10년 동안 지금이랑 똑같은 상황일 때, 며칠 뒤에 주가가 올랐을까 떨어졌을까? 정답지를 미리 훔쳐보는 곳!")
+                        render_ai_speech_bubble("퀀트 백테스터", "과거 10년 동안 지금이랑 똑같은 상황일 때, 며칠 뒤에 주가가 올랐을까 떨어졌을까 예측 (백테스팅)", df_price)
                         pf.render_pro_tab2_backtest(df_price, current_score)
                         
                     with tab_pro3:
-                        render_speech_bubble("💎 요즘 제일 잘나가는 대장주 친구들 중에, 아직 덜 올라서 지금 당장 사면 개꿀인 종목을 싹 다 찾아주는 스캐너야!")
+                        render_ai_speech_bubble("주도주 밸류체인 히트맵", "요즘 제일 잘나가는 대장주 친구들 중에, 아직 덜 올라서 지금 당장 사면 개꿀인 종목 스캔", df_price)
                         pf.render_pro_tab3_value_chain()
                         
                     with tab_pro4:
-                        render_speech_bubble("⚡ 환율이나 금리, 공포지수 같은 으스스한 지표들을 보고, 기계들이 갑자기 주식을 확 던져버릴 폭락 위험이 있는지 경고해주는 레이더!")
+                        render_ai_speech_bubble("매크로/파생 레이더", "환율이나 금리, 공포지수 같은 지표들을 보고, 폭락 위험이 있는지 경고해주는 레이더 역할", df_price)
                         pf.render_pro_tab4_derivatives(region)
                         
                     with tab_pro5:
-                        render_speech_bubble("🤖 복잡한 건 다 빼고 딱 3줄로 AI가 요약해주고, 위험할 때 텔레그램이나 카톡으로 '야 지금 당장 팔아!' 하고 알림 보내주는 곳이야!")
+                        render_ai_speech_bubble("AI 요약 & 실시간 알림", "지금 상황을 가장 명확하게 요약해주고, 위험할 때 경고를 보내주는 알림 봇의 시각", df_price)
                         pf.render_pro_tab5_ai_and_alerts(target_ticker, market_type, current_score, c_status, df_price)
         except Exception as e:
             st.error(f"분석 중 오류가 발생했습니다: {e}")

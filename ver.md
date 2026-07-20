@@ -1,5 +1,17 @@
 # Version History
 
+## v1.13.4
+
+Date: 2026-07-20
+
+### 변경 내용
+* 기존 고정 텍스트 말풍선 가이드를 각 탭의 툴팁(Hover) 형식으로 변경 (JS 인젝션)
+* 각 탭에 Gemini API 연동을 통한 실시간 데이터 기반 '중딩 버전 시황 요약' 동적 말풍선 기능 추가
+* 사이드바에 Gemini API Key 입력란(Password 타입) 추가
+
+### 수정 파일
+* overheat_analyzer.py
+
 ## v1.13.3
 
 Date: 2026-07-20
