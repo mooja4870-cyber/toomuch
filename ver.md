@@ -1,5 +1,15 @@
 # Version History
 
+## v1.13.9
+
+Date: 2026-07-20
+
+### 변경 내용
+* 구글 API 버전 정책 업데이트(v1beta)에 대응하여, `gemini-1.5-flash` 모델을 최신 `gemini-2.5-flash` 모델로 업그레이드하여 404 에러 해결
+
+### 수정 파일
+* overheat_analyzer.py
+
 ## v1.13.8
 
 Date: 2026-07-20

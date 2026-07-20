@@ -277,7 +277,7 @@ if symbol:
                                         try:
                                             import google.generativeai as genai
                                             genai.configure(api_key=api_key)
-                                            model = genai.GenerativeModel("gemini-1.5-flash")
+                                            model = genai.GenerativeModel("gemini-2.5-flash")
                                             
                                             data_context = df_data.tail(3).to_dict() if df_data is not None else "데이터 없음"
                                             
