@@ -1,5 +1,16 @@
 # Version History
 
+## v1.13.6
+
+Date: 2026-07-20
+
+### 변경 내용
+* Streamlit 네임스페이스 패키지 캐싱 문제(`No module named 'google.generativeai'`) 완벽 해결을 위해, venv 파이썬 환경을 별도 자식 프로세스(Subprocess)로 분리 실행하는 우회 아키텍처 도입 (`gemini_caller.py` 신규 추가)
+
+### 수정 파일
+* overheat_analyzer.py
+* gemini_caller.py
+
 ## v1.13.5
 
 Date: 2026-07-20
