@@ -428,6 +428,7 @@ if symbol:
                     missing_dates = all_dates.difference(df_price.index).strftime("%Y-%m-%d").tolist()
 
                     fig.update_layout(
+                        height=800,  # 기존 기본값 450px 대비 약 177% 확대 (450 * 1.77 = 796.5px ≈ 800px)
                         yaxis=dict(range=[min_val, max_val], title="Price"),
                         yaxis2=dict(title="Volume", showgrid=False),
                         xaxis=dict(rangebreaks=[dict(values=missing_dates)], showticklabels=False),
