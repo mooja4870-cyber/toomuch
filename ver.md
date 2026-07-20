@@ -1,5 +1,18 @@
 # Version History
 
+## v1.13.7
+
+Date: 2026-07-20
+
+### 변경 내용
+* Streamlit Cloud 배포 환경에 `google-generativeai` 라이브러리가 누락되었던 진짜 원인 파악 및 `requirements.txt` 원격 저장소 동기화
+* 로컬용으로 잘못 추가되었던 Subprocess 우회 코드(`gemini_caller.py`) 삭제 및 표준 `import` 코드로 원상복구하여 안정성 확보
+
+### 수정 파일
+* overheat_analyzer.py
+* requirements.txt
+* gemini_caller.py (삭제)
+
 ## v1.13.6
 
 Date: 2026-07-20

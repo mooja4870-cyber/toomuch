@@ -256,10 +256,9 @@ if symbol:
                                 else:
                                     with st.spinner("중딩 멘토가 열심히 분석 중이야... 🤓"):
                                         try:
-                                            import subprocess
-                                            import json
-                                            import tempfile
-                                            import os
+                                            import google.generativeai as genai
+                                            genai.configure(api_key=api_key)
+                                            model = genai.GenerativeModel("gemini-1.5-flash")
                                             
                                             data_context = df_data.tail(3).to_dict() if df_data is not None else "데이터 없음"
                                             
@@ -277,26 +276,9 @@ if symbol:
                                             - 가장 중요한 핵심만 2~3문장으로 아주 짧게 요약
                                             - 이모지를 적극적으로 사용
                                             """
-                                            
-                                            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json', encoding='utf-8') as f:
-                                                json.dump({"api_key": api_key, "prompt": prompt}, f)
-                                                temp_path = f.name
-                                                
-                                            python_exec = "/Users/l/project/toomuch/venv/bin/python"
-                                            if not os.path.exists(python_exec):
-                                                python_exec = "python3"
-                                                
-                                            caller_script = os.path.join(os.path.dirname(__file__), "gemini_caller.py")
-                                            result = subprocess.run([python_exec, caller_script, temp_path], 
-                                                                    capture_output=True, text=True, check=True)
-                                            
-                                            os.remove(temp_path)
-                                            st.session_state[state_key] = result.stdout.strip()
+                                            resp = model.generate_content(prompt)
+                                            st.session_state[state_key] = resp.text
                                             st.rerun()
-                                        except subprocess.CalledProcessError as e:
-                                            st.error(f"오류 발생: {e.stderr.strip()}")
-                                            if 'temp_path' in locals() and os.path.exists(temp_path):
-                                                os.remove(temp_path)
                                         except Exception as e:
                                             st.error(f"오류 발생: {e}")
                         else:

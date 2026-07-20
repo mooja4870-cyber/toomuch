@@ -3,3 +3,4 @@ pandas
 numpy
 finance-datareader
 plotly
+google-generativeai
