@@ -1,5 +1,17 @@
 # Version History
 
+## v1.13.1
+
+Date: 2026-07-20
+
+### 변경 내용
+* 사이드바(`st.sidebar`) UI 내 종목/시장 선택 분기(국장/미장) 간 발생하는 Streamlit `DuplicateWidgetID` 런타임 에러(동일 라벨 `radio`, `text_input`, `selectbox` 위젯 충돌) 해결
+* `overheat_analyzer.py` 내 모든 사이드바 위젯에 `key` 인자(`sidebar_region`, `sidebar_market_kr`, `sidebar_market_us` 등)를 고유하게 강제 부여하여 안정적인 브랜치 렌더링 환경 구축
+
+### 수정 파일
+* overheat_analyzer.py
+* ver.md
+
 ## v1.13.0
 
 Date: 2026-07-20
