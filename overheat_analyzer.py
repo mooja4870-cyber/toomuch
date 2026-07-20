@@ -5,6 +5,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import pro_features as pf
 
 st.set_page_config(page_title="한국 주식시장 과열 판별기", page_icon="🔥", layout="wide")
 
@@ -368,114 +369,139 @@ if symbol:
                     
                     st.markdown("---")
                     
-                    col_title, col_period = st.columns([4, 1])
-                    with col_title:
-                        st.subheader("📈 주가 추이 및 시장 온도 히트맵")
-                    with col_period:
-                        st.selectbox("기간 선택", ["1개월", "3개월", "6개월", "1년", "3년", "5년", "10년", "최대"], index=3, key="chart_period", label_visibility="collapsed")
+                    tab_main, tab_pro1, tab_pro2, tab_pro3, tab_pro4, tab_pro5 = st.tabs([
+                        "📊 기본 과열 분석 & 차트",
+                        "👔 [PRO 1] 스마트 머니 수급 & 숏스퀴즈",
+                        "📈 [PRO 2] 퀀트 백테스터 & 기대수익률",
+                        "🌐 [PRO 3] 주도주 밸류체인 히트맵",
+                        "⚡ [PRO 4] 파생/베이시스 매크로 레이더",
+                        "🤖 [PRO 5] AI 요약 & 실시간 알림"
+                    ])
                     
-                    # 전체 데이터에 대해 일별 과열 스코어 및 색상 산출
-                    colors = []
-                    for idx, row in df_price.iterrows():
-                        s, _ = evaluate_overheat(row, use_macro, macro_df)
-                        _, c = get_status_info(s)
-                        colors.append(c)
-                    
-                    fig = make_subplots(
-                        rows=2,
-                        cols=1,
-                        shared_xaxes=True,
-                        vertical_spacing=0.03,
-                        row_heights=[0.78, 0.22]
-                    )
-                    min_val = df_price['Close'].min() * 0.95
-                    max_val = df_price['Close'].max() * 1.08
-                    
-                    # 1. 배경 색상 띠 (Bar 차트로 높이를 전체 영역으로 설정 - Row 1)
-                    fig.add_trace(go.Bar(
-                        x=df_price.index,
-                        y=[max_val - min_val] * len(df_price),
-                        base=min_val,
-                        marker_color=colors,
-                        opacity=0.25,
-                        marker_line_width=0,
-                        hoverinfo='none',
-                        showlegend=False
-                    ), row=1, col=1)
-                    
-                    # 2. 주가 선 차트 오버레이 (Row 1)
-                    fig.add_trace(go.Scatter(
-                        x=df_price.index,
-                        y=df_price['Close'],
-                        mode='lines',
-                        line=dict(color='white', width=2),
-                        name='종가'
-                    ), row=1, col=1)
-
-                    # 3. 거래량 차트 (Row 2)
-                    vol_colors = ['#FF4B4B' if diff >= 0 else '#1E90FF' for diff in df_price['Close'].diff().fillna(0)]
-                    fig.add_trace(go.Bar(
-                        x=df_price.index,
-                        y=df_price['Volume'],
-                        marker_color=vol_colors,
-                        opacity=0.75,
-                        marker_line_width=0,
-                        name='거래량'
-                    ), row=2, col=1)
-                    
-                    # 4. 지정일자 상단 황금색 역삼각형(▼, 폰트크기 300%) 깜빡임 마커 추가 (Row 1 및 Row 2)
-                    if not target_df.empty:
-                        actual_target_dt = target_df.index[-1]
-                        target_high = target_df.iloc[-1]['High'] if 'High' in target_df.columns else target_df.iloc[-1]['Close']
-                        target_vol = target_df.iloc[-1]['Volume']
+                    with tab_main:
+                        col_title, col_period = st.columns([4, 1])
+                        with col_title:
+                            st.subheader("📈 주가 추이 및 시장 온도 히트맵")
+                        with col_period:
+                            st.selectbox("기간 선택", ["1개월", "3개월", "6개월", "1년", "3년", "5년", "10년", "최대"], index=3, key="chart_period", label_visibility="collapsed")
                         
-                        # Row 1 (주가 차트) 황금색 역삼각형
-                        fig.add_trace(go.Scatter(
-                            x=[actual_target_dt],
-                            y=[target_high],
-                            mode='text',
-                            text=['▼'],
-                            textfont=dict(size=36, color='#FFD700'),
-                            textposition='top center',
-                            name='지정일자',
+                        # 전체 데이터에 대해 일별 과열 스코어 및 색상 산출
+                        colors = []
+                        for idx, row in df_price.iterrows():
+                            s, _ = evaluate_overheat(row, use_macro, macro_df)
+                            _, c = get_status_info(s)
+                            colors.append(c)
+                        
+                        fig = make_subplots(
+                            rows=2,
+                            cols=1,
+                            shared_xaxes=True,
+                            vertical_spacing=0.03,
+                            row_heights=[0.78, 0.22]
+                        )
+                        min_val = df_price['Close'].min() * 0.95
+                        max_val = df_price['Close'].max() * 1.08
+                        
+                        # 1. 배경 색상 띠 (Bar 차트로 높이를 전체 영역으로 설정 - Row 1)
+                        fig.add_trace(go.Bar(
+                            x=df_price.index,
+                            y=[max_val - min_val] * len(df_price),
+                            base=min_val,
+                            marker_color=colors,
+                            opacity=0.25,
+                            marker_line_width=0,
                             hoverinfo='none',
                             showlegend=False
                         ), row=1, col=1)
                         
-                        # Row 2 (거래량 차트) 황금색 역삼각형
+                        # 2. 주가 선 차트 오버레이 (Row 1)
                         fig.add_trace(go.Scatter(
-                            x=[actual_target_dt],
-                            y=[target_vol],
-                            mode='text',
-                            text=['▼'],
-                            textfont=dict(size=36, color='#FFD700'),
-                            textposition='top center',
-                            name='지정일자_거래량',
-                            hoverinfo='none',
-                            showlegend=False
-                        ), row=2, col=1)
-                    
-                    # 주말 및 휴장일(공백) 제거를 위한 누락 날짜 계산
-                    all_dates = pd.date_range(start=df_price.index.min(), end=df_price.index.max())
-                    missing_dates = all_dates.difference(df_price.index).strftime("%Y-%m-%d").tolist()
+                            x=df_price.index,
+                            y=df_price['Close'],
+                            mode='lines',
+                            line=dict(color='white', width=2),
+                            name='종가'
+                        ), row=1, col=1)
 
-                    fig.update_layout(
-                        height=800,  # 기존 기본값 450px 대비 약 177% 확대 (450 * 1.77 = 796.5px ≈ 800px)
-                        yaxis=dict(range=[min_val, max_val], title="Price"),
-                        yaxis2=dict(range=[0, df_price['Volume'].max() * 1.15], title="Volume", showgrid=False),
-                        xaxis=dict(rangebreaks=[dict(values=missing_dates)], showticklabels=False),
-                        xaxis2=dict(title="Date", rangebreaks=[dict(values=missing_dates)]),
-                        barmode='overlay',
-                        margin=dict(l=0, r=0, t=10, b=0),
-                        template="plotly_dark",
-                        hovermode="x unified"
-                    )
-                    
-                    st.plotly_chart(fig, width='stretch')
-                    
-                    st.divider()
-                    
-                    st.markdown("### 📊 상세 지표 타임라인 비교")
-                    st.table(df_merged)
+                        # 3. 거래량 차트 (Row 2)
+                        vol_colors = ['#FF4B4B' if diff >= 0 else '#1E90FF' for diff in df_price['Close'].diff().fillna(0)]
+                        fig.add_trace(go.Bar(
+                            x=df_price.index,
+                            y=df_price['Volume'],
+                            marker_color=vol_colors,
+                            opacity=0.75,
+                            marker_line_width=0,
+                            name='거래량'
+                        ), row=2, col=1)
+                        
+                        # 4. 지정일자 상단 황금색 역삼각형(▼, 폰트크기 300%) 깜빡임 마커 추가 (Row 1 및 Row 2)
+                        if not target_df.empty:
+                            actual_target_dt = target_df.index[-1]
+                            target_high = target_df.iloc[-1]['High'] if 'High' in target_df.columns else target_df.iloc[-1]['Close']
+                            target_vol = target_df.iloc[-1]['Volume']
+                            
+                            # Row 1 (주가 차트) 황금색 역삼각형
+                            fig.add_trace(go.Scatter(
+                                x=[actual_target_dt],
+                                y=[target_high],
+                                mode='text',
+                                text=['▼'],
+                                textfont=dict(size=36, color='#FFD700'),
+                                textposition='top center',
+                                name='지정일자',
+                                hoverinfo='none',
+                                showlegend=False
+                            ), row=1, col=1)
+                            
+                            # Row 2 (거래량 차트) 황금색 역삼각형
+                            fig.add_trace(go.Scatter(
+                                x=[actual_target_dt],
+                                y=[target_vol],
+                                mode='text',
+                                text=['▼'],
+                                textfont=dict(size=36, color='#FFD700'),
+                                textposition='top center',
+                                name='지정일자_거래량',
+                                hoverinfo='none',
+                                showlegend=False
+                            ), row=2, col=1)
+                        
+                        # 주말 및 휴장일(공백) 제거를 위한 누락 날짜 계산
+                        all_dates = pd.date_range(start=df_price.index.min(), end=df_price.index.max())
+                        missing_dates = all_dates.difference(df_price.index).strftime("%Y-%m-%d").tolist()
+
+                        fig.update_layout(
+                            height=800,  # 기존 기본값 450px 대비 약 177% 확대 (450 * 1.77 = 796.5px ≈ 800px)
+                            yaxis=dict(range=[min_val, max_val], title="Price"),
+                            yaxis2=dict(range=[0, df_price['Volume'].max() * 1.15], title="Volume", showgrid=False),
+                            xaxis=dict(rangebreaks=[dict(values=missing_dates)], showticklabels=False),
+                            xaxis2=dict(title="Date", rangebreaks=[dict(values=missing_dates)]),
+                            barmode='overlay',
+                            margin=dict(l=0, r=0, t=10, b=0),
+                            template="plotly_dark",
+                            hovermode="x unified"
+                        )
+                        
+                        st.plotly_chart(fig, width='stretch')
+                        
+                        st.divider()
+                        
+                        st.markdown("### 📊 상세 지표 타임라인 비교")
+                        st.table(df_merged)
+                        
+                    with tab_pro1:
+                        pf.render_pro_tab1_smart_money(df_price, target_date)
+                        
+                    with tab_pro2:
+                        pf.render_pro_tab2_backtest(df_price, current_score)
+                        
+                    with tab_pro3:
+                        pf.render_pro_tab3_value_chain()
+                        
+                    with tab_pro4:
+                        pf.render_pro_tab4_derivatives(region)
+                        
+                    with tab_pro5:
+                        pf.render_pro_tab5_ai_and_alerts(target_ticker, market_type, current_score, c_status, df_price)
         except Exception as e:
             st.error(f"분석 중 오류가 발생했습니다: {e}")
