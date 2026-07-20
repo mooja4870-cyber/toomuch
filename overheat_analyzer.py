@@ -279,6 +279,21 @@ if symbol:
                         """
                         
                         state_key = f"ai_summary_{tab_id}"
+                        
+                        if state_key not in st.session_state:
+                            target_dt = pd.to_datetime(target_date).date()
+                            if target_dt == datetime.today().date() and symbol in ["KS11", "KQ11", "DJI", "US500", "IXIC"]:
+                                batch_file = os.path.join(os.path.dirname(__file__), "batch_results.json")
+                                if os.path.exists(batch_file):
+                                    try:
+                                        import json
+                                        with open(batch_file, "r", encoding="utf-8") as f:
+                                            b_data = json.load(f)
+                                        if symbol in b_data.get("data", {}) and tab_id in b_data["data"][symbol]:
+                                            st.session_state[state_key] = b_data["data"][symbol][tab_id]
+                                    except Exception:
+                                        pass
+                                        
                         if state_key not in st.session_state:
                             if not api_key:
                                 msg = "Gemini API 키를 왼쪽 사이드바에 입력하고 아래 버튼을 누르면 실시간 시황을 재밌게 알려줄게! 🤖"
