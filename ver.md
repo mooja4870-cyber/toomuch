@@ -1,5 +1,17 @@
 # Version History
 
+## v1.12.3
+
+Date: 2026-07-20
+
+### 변경 내용
+* 지정일자 직관성 향상: 과거 지정일(`target_date`) 위치에 나타나던 빨간색 점선(`add_vline`) 제거
+* 지정일자 영역(Row 1 및 Row 2)의 배경 막대 색상이 1초 간격으로 3배(`fill-opacity: 0.75`) 커졌다가 1배(`fill-opacity: 0.25`)로 작아지는 깜빡임 애니메이션(`bar-blink`) 효과 추가
+
+### 수정 파일
+* overheat_analyzer.py
+* ver.md
+
 ## v1.12.2
 
 Date: 2026-07-20
