@@ -360,10 +360,6 @@ if symbol:
                         st.markdown(f"**상태:** {c_status}")
                     
                     st.markdown("---")
-                    st.markdown("### 📊 상세 지표 타임라인 비교")
-                    st.table(df_merged)
-                    
-                    st.divider()
                     
                     col_title, col_period = st.columns([4, 1])
                     with col_title:
@@ -440,5 +436,10 @@ if symbol:
                     )
                     
                     st.plotly_chart(fig, width='stretch')
+                    
+                    st.divider()
+                    
+                    st.markdown("### 📊 상세 지표 타임라인 비교")
+                    st.table(df_merged)
         except Exception as e:
             st.error(f"분석 중 오류가 발생했습니다: {e}")
