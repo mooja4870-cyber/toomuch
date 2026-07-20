@@ -23,7 +23,13 @@ def run_batch():
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-2.5-flash")
     
-    indices = ["KS11", "KQ11", "DJI", "US500", "IXIC"]
+    indices_map = {
+        "KS11": "코스피 시장",
+        "KQ11": "코스닥 시장",
+        "DJI": "다우 지수",
+        "US500": "S&P 500 지수",
+        "IXIC": "나스닥 지수"
+    }
     tabs_info = {
         "기본 과열 분석 & 차트": "현재 주식이 너무 올랐는지, 쌀 때인지 한눈에 보여주는 기본 차트 분석",
         "스마트 머니 수급": "외국인이나 기관 같은 '진짜 부자들'이 몰래 사고 있는지, 개미들한테 물량 넘기고 도망가는 중인지 분석",
@@ -37,7 +43,7 @@ def run_batch():
     today = datetime.datetime.today()
     start_date = today - timedelta(days=365*5)
     
-    for symbol in indices:
+    for symbol, target_name in indices_map.items():
         print(f"Fetching data for {symbol}...")
         try:
             df_price = fdr.DataReader(symbol, start_date, today)
@@ -54,16 +60,18 @@ def run_batch():
             prompt = f"""
             당신은 중학생에게 주식 시황을 아주 쉽고 재미있게 설명해주는 친절한 AI 멘토입니다.
             현재 당신은 '{system_context}' 탭의 역할을 맡고 있습니다.
-            다음 데이터를 바탕으로 현재 시장/종목 상황을 분석해주세요.
+            다음 데이터를 바탕으로 현재 [{target_name}]의 상황을 분석해주세요.
             
             [최근 데이터 요약]
             {data_context}
             
             [조건]
+            - 분석 대상: {target_name}
             - 말투는 친근한 반말 (중딩 멘토 느낌)
             - 이 탭의 목적({system_context})에 맞게 분석 결과를 비유적으로 설명
             - 가장 중요한 핵심만 2~3문장으로 아주 짧게 요약
             - 이모지를 적극적으로 사용
+            - 🚨 중요 🚨: 분석 대상({target_name})이 코스피, 나스닥 등 '시장 지수'인 경우, 절대로 '종목', '이 주식'이라는 표현을 쓰지 말고 반드시 지수 이름(예: 코스피 시장은~, 나스닥 지수는~)으로 명확하게 부를 것!
             """
             
             try:
