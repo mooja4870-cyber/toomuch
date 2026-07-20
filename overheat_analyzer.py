@@ -110,7 +110,26 @@ else:
                 st.sidebar.warning("검색 결과가 없습니다.")
 
 target_date = st.sidebar.date_input("기준 일자", datetime.today(), key="sidebar_target_date")
-st.session_state["gemini_api_key"] = st.sidebar.text_input("Gemini API Key (선택)", type="password", key="sidebar_gemini_api_key")
+import os
+API_KEY_FILE = os.path.join(os.path.dirname(__file__), ".api_key.txt")
+default_api_key = ""
+if os.path.exists(API_KEY_FILE):
+    with open(API_KEY_FILE, "r", encoding="utf-8") as f:
+        default_api_key = f.read().strip()
+
+def save_api_key():
+    val = st.session_state.sidebar_gemini_api_key
+    with open(API_KEY_FILE, "w", encoding="utf-8") as f:
+        f.write(val.strip())
+
+api_key = st.sidebar.text_input(
+    "Gemini API Key (선택)", 
+    value=default_api_key, 
+    type="password", 
+    key="sidebar_gemini_api_key",
+    on_change=save_api_key
+)
+st.session_state["gemini_api_key"] = api_key
 use_macro = st.sidebar.checkbox("매크로 자금동향 포함 (신용잔고/예탁금)", value=True, key="sidebar_use_macro")
 macro_df = None
 if use_macro:

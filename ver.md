@@ -1,5 +1,17 @@
 # Version History
 
+## v1.13.8
+
+Date: 2026-07-20
+
+### 변경 내용
+* 디버깅 편의성을 위한 Gemini API Key 로컬 저장 기능 추가 (한 번 입력 시 `.api_key.txt`에 저장 후 다음 접속 시 자동 불러오기)
+* 보안 처리를 위해 `.gitignore`에 `.api_key.txt` 추가
+
+### 수정 파일
+* overheat_analyzer.py
+* .gitignore
+
 ## v1.13.7
 
 Date: 2026-07-20
