@@ -246,12 +246,14 @@ if symbol:
                     st.markdown("""
                         <style>
                         @keyframes tab-highlight-blink {
-                            0%, 100% { opacity: 1 !important; }
-                            50% { opacity: 0 !important; }
+                            0%, 100% { border-bottom-color: #ff4b4b !important; opacity: 1 !important; }
+                            50% { border-bottom-color: transparent !important; opacity: 0.8 !important; }
                         }
-                        div[data-baseweb="tab-highlight"] {
-                            height: 4px !important;
-                            background-color: #ff4b4b !important;
+                        .stTabs [data-baseweb="tab-highlight"] {
+                            display: none !important;
+                        }
+                        .stTabs button[aria-selected="true"] {
+                            border-bottom: 3.76px solid #ff4b4b !important;
                             animation: tab-highlight-blink 1s infinite !important;
                         }
                         </style>
