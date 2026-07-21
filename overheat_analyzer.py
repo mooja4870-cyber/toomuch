@@ -306,11 +306,7 @@ if symbol:
                                         pass
                                         
                         if state_key not in st.session_state:
-                            if not api_key:
-                                msg = "Gemini API 키를 왼쪽 사이드바에 입력하고 아래 버튼을 누르면 실시간 시황을 재밌게 알려줄게! 🤖"
-                            else:
-                                msg = "현재 데이터를 분석할 준비가 완료됐어! 아래 버튼을 눌러줘 🚀"
-                            st.markdown(bubble_style.replace("{text}", msg), unsafe_allow_html=True)
+
                             
                             st.markdown("""
                                 <div style="font-size: 3rem; text-align: left; padding-left: 20px; animation: blink-finger 1s infinite; margin-bottom: -15px;">
