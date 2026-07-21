@@ -314,7 +314,7 @@ if symbol:
                             
                             st.markdown("""
                                 <div style="font-size: 3rem; text-align: left; padding-left: 20px; animation: blink-finger 1s infinite; margin-bottom: -15px;">
-                                    👆
+                                    👇
                                 </div>
                                 <style>
                                 @keyframes blink-finger {
