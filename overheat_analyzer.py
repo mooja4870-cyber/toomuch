@@ -263,30 +263,41 @@ if symbol:
                     ];
                     setInterval(() => {
                         const doc = window.parent.document;
-                        const tabs = doc.querySelectorAll('button[data-baseweb="tab"]');
+                        const tabs = doc.querySelectorAll('button[data-baseweb="tab"], button[data-testid="stTab"]');
                         tabs.forEach((tab, index) => {
                             if(index < tooltips.length) {
                                 tab.title = tooltips[index];
                             }
-                            // Reset border for non-active tabs
-                            if (tab.getAttribute('aria-selected') !== 'true') {
-                                tab.style.borderBottom = '';
-                            }
                         });
                         
-                        // Handle blinking and thicker border for active tab
-                        const activeTab = doc.querySelector('button[aria-selected="true"]');
-                        if (activeTab) {
-                            const time = new Date().getTime();
-                            const isBlink = Math.floor(time / 1000) % 2 === 0;
-                            const color = isBlink ? '#ff4b4b' : 'transparent';
-                            activeTab.style.setProperty('border-bottom', `3.76px solid ${color}`, 'important');
-                        }
+                        // Universal Tab Highlight blinking logic
+                        const time = new Date().getTime();
+                        const isBlink = Math.floor(time / 1000) % 2 === 0;
+                        const opacityVal = isBlink ? '1' : '0';
                         
-                        // Hide the default highlight div if it exists
-                        const defaultHighlight = doc.querySelector('div[data-baseweb="tab-highlight"]');
-                        if (defaultHighlight) {
-                            defaultHighlight.style.setProperty('display', 'none', 'important');
+                        // Try BaseWeb selector first
+                        let highlights = doc.querySelectorAll('div[data-baseweb="tab-highlight"]');
+                        if (highlights.length > 0) {
+                            highlights.forEach(h => {
+                                h.style.setProperty('height', '3.76px', 'important');
+                                h.style.setProperty('opacity', opacityVal, 'important');
+                            });
+                        } else {
+                            // Fallback: search DOM heuristically
+                            const tablists = doc.querySelectorAll('[role="tablist"]');
+                            tablists.forEach(tablist => {
+                                const children = tablist.children;
+                                for (let i = 0; i < children.length; i++) {
+                                    const child = children[i];
+                                    if (child.tagName === 'DIV' && !child.getAttribute('role')) {
+                                        const computedHeight = window.parent.getComputedStyle(child).height;
+                                        if (child.style.position === 'absolute' || computedHeight === '2px') {
+                                            child.style.setProperty('height', '3.76px', 'important');
+                                            child.style.setProperty('opacity', opacityVal, 'important');
+                                        }
+                                    }
+                                }
+                            });
                         }
                         
                         const buttons = doc.querySelectorAll('button p');
