@@ -268,7 +268,6 @@ if symbol:
                             border-radius: 8px !important;
                             margin-right: 6px !important;
                             transition: all 0.3s ease !important;
-                            overflow: hidden !important;
                         }
                         
                         .stTabs button[role="tab"]:hover {
@@ -279,6 +278,26 @@ if symbol:
                             background-color: rgba(255, 255, 255, 0.15) !important;
                             border-color: rgba(255, 255, 255, 0.2) !important;
                             position: relative !important;
+                            overflow: visible !important;
+                        }
+
+                        /* Active tab blinking text font size (100% to 333% using rem to prevent compounding) */
+                        @keyframes tab-text-font-pulse {
+                            0%, 100% {
+                                font-size: 1rem !important;
+                                opacity: 1;
+                            }
+                            50% {
+                                font-size: 3.33rem !important;
+                                opacity: 0.25;
+                            }
+                        }
+
+                        .stTabs button[role="tab"][aria-selected="true"] p,
+                        .stTabs button[role="tab"][aria-selected="true"] span,
+                        .stTabs button[role="tab"][aria-selected="true"] > div {
+                            animation: tab-text-font-pulse 1s infinite !important;
+                            line-height: 1.2 !important;
                         }
 
                         /* Apply thick, blinking custom indicator using ::after pseudo-element */
@@ -295,6 +314,8 @@ if symbol:
                             width: 100%;
                             height: 3.76px;
                             background-color: #ff4b4b;
+                            border-bottom-left-radius: 8px;
+                            border-bottom-right-radius: 8px;
                             animation: tab-highlight-blink-opacity 1s infinite !important;
                         }
                         </style>
