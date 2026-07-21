@@ -246,13 +246,13 @@ if symbol:
                     st.markdown("""
                         <style>
                         @keyframes tab-highlight-blink {
-                            0%, 100% { opacity: 1; }
-                            50% { opacity: 0; }
+                            0%, 100% { opacity: 1 !important; }
+                            50% { opacity: 0 !important; }
                         }
                         div[data-baseweb="tab-highlight"] {
-                            transform: scaleY(1.88);
-                            transform-origin: bottom;
-                            animation: tab-highlight-blink 1s infinite;
+                            height: 4px !important;
+                            background-color: #ff4b4b !important;
+                            animation: tab-highlight-blink 1s infinite !important;
                         }
                         </style>
                     """, unsafe_allow_html=True)
