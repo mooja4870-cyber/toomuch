@@ -36,9 +36,9 @@ st.markdown("""
     }
     
     @keyframes button-blink {
-        0% { border-color: rgba(255, 215, 0, 0) !important; box-shadow: 0 0 0px transparent !important; }
-        50% { border-color: rgba(255, 215, 0, 1) !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.8) !important; }
-        100% { border-color: rgba(255, 215, 0, 0) !important; box-shadow: 0 0 0px transparent !important; }
+        0% { background-color: #FFD700 !important; border-color: #FFA500 !important; box-shadow: 0 0 5px rgba(255, 215, 0, 0.6) !important; color: #000000 !important; }
+        50% { background-color: #FFEE66 !important; border-color: #FF8C00 !important; box-shadow: 0 0 20px rgba(255, 215, 0, 1) !important; color: #000000 !important; }
+        100% { background-color: #FFD700 !important; border-color: #FFA500 !important; box-shadow: 0 0 5px rgba(255, 215, 0, 0.6) !important; color: #000000 !important; }
     }
     
     /* 모바일 및 카카오톡 인앱 브라우저에서 사이드바 확장(열기) 버튼이 상단 헤더에 가려지지 않도록 설정 */
@@ -366,15 +366,21 @@ if symbol:
                         
                         const buttons = doc.querySelectorAll('button p');
                         buttons.forEach((p) => {
-                            if(p.innerText.includes('실시간 시황 분석하기')) {
+                            if(p.innerText.includes('실시간 시황 분석하기') || p.innerText.includes('다시 분석하기')) {
                                 const btn = p.closest('button');
                                 if (btn) {
+                                    btn.style.backgroundColor = '#FFD700';
+                                    btn.style.borderColor = '#FFA500';
+                                    btn.style.color = '#000000';
+                                    btn.style.fontWeight = '800';
                                     btn.style.animation = 'button-blink 1s infinite';
                                     btn.style.transition = 'all 0.3s ease';
                                     btn.style.transform = 'scale(1.33)';
                                     btn.style.transformOrigin = 'left center';
                                     btn.style.marginTop = '10px';
                                     btn.style.marginBottom = '10px';
+                                    p.style.color = '#000000';
+                                    p.style.fontWeight = '800';
                                 }
                             }
                         });
