@@ -312,6 +312,18 @@ if symbol:
                                 msg = "현재 데이터를 분석할 준비가 완료됐어! 아래 버튼을 눌러줘 🚀"
                             st.markdown(bubble_style.replace("{text}", msg), unsafe_allow_html=True)
                             
+                            st.markdown("""
+                                <div style="font-size: 3rem; text-align: left; padding-left: 20px; animation: blink-finger 1s infinite; margin-bottom: -15px;">
+                                    👆
+                                </div>
+                                <style>
+                                @keyframes blink-finger {
+                                    0%, 100% { opacity: 1; transform: translateY(0); }
+                                    50% { opacity: 0.3; transform: translateY(8px); }
+                                }
+                                </style>
+                            """, unsafe_allow_html=True)
+                            
                             if st.button(f"🤖 {tab_id} 실시간 시황 분석하기", key=f"btn_analyze_{tab_id}"):
                                 if not api_key:
                                     st.error("왼쪽 사이드바에 Gemini API 키를 먼저 입력해주세요!")
