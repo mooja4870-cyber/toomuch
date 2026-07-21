@@ -235,12 +235,12 @@ if symbol:
                     st.markdown("---")
                     
                     tab_main, tab_pro1, tab_pro2, tab_pro3, tab_pro4, tab_pro5 = st.tabs([
-                        "📊 기본 과열 분석 & 차트",
-                        "👔 [PRO 1] 스마트 머니 수급 & 숏스퀴즈",
-                        "📈 [PRO 2] 퀀트 백테스터 & 기대수익률",
-                        "🌐 [PRO 3] 주도주 밸류체인 히트맵",
-                        "⚡ [PRO 4] 파생/베이시스 매크로 레이더",
-                        "🤖 [PRO 5] AI 요약 & 실시간 알림"
+                        "기본 과열 분석 & 차트",
+                        "스마트 머니 수급 & 숏스퀴즈",
+                        "퀀트 백테스터 & 기대수익률",
+                        "주도주 밸류체인 히트맵",
+                        "파생/베이시스 매크로 레이더",
+                        "AI 요약 & 실시간 알림"
                     ])
                     
                     st.markdown("""
@@ -261,14 +261,30 @@ if symbol:
                             opacity: 0 !important;
                         }
 
+                        /* Base style for ALL tabs to look like subtle rounded boxes */
+                        .stTabs button[role="tab"] {
+                            background-color: rgba(255, 255, 255, 0.05) !important;
+                            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                            border-radius: 8px !important;
+                            margin-right: 6px !important;
+                            transition: all 0.3s ease !important;
+                            overflow: hidden !important;
+                        }
+                        
+                        .stTabs button[role="tab"]:hover {
+                            background-color: rgba(255, 255, 255, 0.1) !important;
+                        }
+                        
+                        .stTabs button[role="tab"][aria-selected="true"] {
+                            background-color: rgba(255, 255, 255, 0.15) !important;
+                            border-color: rgba(255, 255, 255, 0.2) !important;
+                            position: relative !important;
+                        }
+
                         /* Apply thick, blinking custom indicator using ::after pseudo-element */
                         @keyframes tab-highlight-blink-opacity {
                             0%, 100% { opacity: 1; }
                             50% { opacity: 0; }
-                        }
-                        
-                        .stTabs button[role="tab"][aria-selected="true"] {
-                            position: relative !important;
                         }
                         
                         .stTabs button[role="tab"][aria-selected="true"]::after {
