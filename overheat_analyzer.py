@@ -245,16 +245,8 @@ if symbol:
                     
                     st.markdown("""
                         <style>
-                        @keyframes tab-highlight-blink {
-                            0%, 100% { border-bottom-color: #ff4b4b !important; opacity: 1 !important; }
-                            50% { border-bottom-color: transparent !important; opacity: 0.8 !important; }
-                        }
                         .stTabs [data-baseweb="tab-highlight"] {
                             display: none !important;
-                        }
-                        .stTabs button[aria-selected="true"] {
-                            border-bottom: 3.76px solid #ff4b4b !important;
-                            animation: tab-highlight-blink 1s infinite !important;
                         }
                         </style>
                     """, unsafe_allow_html=True)
@@ -270,14 +262,34 @@ if symbol:
                         "AI 요약 & 알림: AI 기반 3줄 요약 및 실시간 텔레그램/웹훅 알림 설정 화면입니다."
                     ];
                     setInterval(() => {
-                        const tabs = window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
+                        const doc = window.parent.document;
+                        const tabs = doc.querySelectorAll('button[data-baseweb="tab"]');
                         tabs.forEach((tab, index) => {
                             if(index < tooltips.length) {
                                 tab.title = tooltips[index];
                             }
+                            // Reset border for non-active tabs
+                            if (tab.getAttribute('aria-selected') !== 'true') {
+                                tab.style.borderBottom = '';
+                            }
                         });
                         
-                        const buttons = window.parent.document.querySelectorAll('button p');
+                        // Handle blinking and thicker border for active tab
+                        const activeTab = doc.querySelector('button[aria-selected="true"]');
+                        if (activeTab) {
+                            const time = new Date().getTime();
+                            const isBlink = Math.floor(time / 1000) % 2 === 0;
+                            const color = isBlink ? '#ff4b4b' : 'transparent';
+                            activeTab.style.setProperty('border-bottom', `3.76px solid ${color}`, 'important');
+                        }
+                        
+                        // Hide the default highlight div if it exists
+                        const defaultHighlight = doc.querySelector('div[data-baseweb="tab-highlight"]');
+                        if (defaultHighlight) {
+                            defaultHighlight.style.setProperty('display', 'none', 'important');
+                        }
+                        
+                        const buttons = doc.querySelectorAll('button p');
                         buttons.forEach((p) => {
                             if(p.innerText.includes('실시간 시황 분석하기')) {
                                 const btn = p.closest('button');
@@ -291,7 +303,7 @@ if symbol:
                                 }
                             }
                         });
-                    }, 1000);
+                    }, 500); // 500ms interval for blinking
                     </script>
                     """, height=0, width=0)
 
