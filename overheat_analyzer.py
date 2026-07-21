@@ -251,6 +251,39 @@ if symbol:
                         </style>
                     """, unsafe_allow_html=True)
                     
+                    st.markdown("""
+                        <style>
+                        /* Hide Streamlit's default tab highlight indicators (handles multiple Streamlit versions) */
+                        .stTabs [data-baseweb="tab-highlight"],
+                        .stTabs [data-testid="stTabIndicator"],
+                        .stTabs [role="tablist"] > div:not([role="tab"]):not([data-baseweb="tab-border"]) {
+                            display: none !important;
+                            opacity: 0 !important;
+                        }
+
+                        /* Apply thick, blinking custom indicator using ::after pseudo-element */
+                        @keyframes tab-highlight-blink-opacity {
+                            0%, 100% { opacity: 1; }
+                            50% { opacity: 0; }
+                        }
+                        
+                        .stTabs button[role="tab"][aria-selected="true"] {
+                            position: relative !important;
+                        }
+                        
+                        .stTabs button[role="tab"][aria-selected="true"]::after {
+                            content: "";
+                            position: absolute;
+                            bottom: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 3.76px;
+                            background-color: #ff4b4b;
+                            animation: tab-highlight-blink-opacity 1s infinite !important;
+                        }
+                        </style>
+                    """, unsafe_allow_html=True)
+                    
                     components.html("""
                     <script>
                     const tooltips = [
@@ -270,36 +303,6 @@ if symbol:
                             }
                         });
                         
-                        // Universal Tab Highlight blinking logic
-                        const time = new Date().getTime();
-                        const isBlink = Math.floor(time / 1000) % 2 === 0;
-                        const opacityVal = isBlink ? '1' : '0';
-                        
-                        // Try BaseWeb selector first
-                        let highlights = doc.querySelectorAll('div[data-baseweb="tab-highlight"]');
-                        if (highlights.length > 0) {
-                            highlights.forEach(h => {
-                                h.style.setProperty('height', '3.76px', 'important');
-                                h.style.setProperty('opacity', opacityVal, 'important');
-                            });
-                        } else {
-                            // Fallback: search DOM heuristically
-                            const tablists = doc.querySelectorAll('[role="tablist"]');
-                            tablists.forEach(tablist => {
-                                const children = tablist.children;
-                                for (let i = 0; i < children.length; i++) {
-                                    const child = children[i];
-                                    if (child.tagName === 'DIV' && !child.getAttribute('role')) {
-                                        const computedHeight = window.parent.getComputedStyle(child).height;
-                                        if (child.style.position === 'absolute' || computedHeight === '2px') {
-                                            child.style.setProperty('height', '3.76px', 'important');
-                                            child.style.setProperty('opacity', opacityVal, 'important');
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                        
                         const buttons = doc.querySelectorAll('button p');
                         buttons.forEach((p) => {
                             if(p.innerText.includes('실시간 시황 분석하기')) {
@@ -314,7 +317,7 @@ if symbol:
                                 }
                             }
                         });
-                    }, 500); // 500ms interval for blinking
+                    }, 1000);
                     </script>
                     """, height=0, width=0)
 

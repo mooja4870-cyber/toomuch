@@ -1,6 +1,6 @@
 # Version History
 
-## v1.13.23
+## v1.13.24
 
 Date: 2026-07-21
 
