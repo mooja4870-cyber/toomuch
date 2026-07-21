@@ -7,7 +7,7 @@ from datetime import timedelta
 import builtins
 import FinanceDataReader as fdr
 import google.generativeai as genai
-from core_logic import calc_technical_indicators
+from core_logic import calc_technical_indicators, TAB_SPECIFIC_GUIDELINES, get_tab_specific_data_context
 
 _old_print = builtins.print
 def print(*args, **kwargs):
@@ -57,34 +57,40 @@ def run_batch():
             if df_price.empty:
                 continue
             df_price = calc_technical_indicators(df_price)
-            data_context = df_price.tail(3).to_dict()
         except Exception as e:
             print(f"Error fetching data for {symbol}: {e}")
             continue
             
         results[symbol] = {}
         for tab_id, system_context in tabs_info.items():
+            data_context = get_tab_specific_data_context(tab_id, symbol, target_name, df_price)
+            guidelines = TAB_SPECIFIC_GUIDELINES.get(tab_id, "")
+            
             prompt = f"""
             당신은 중학생이나 주식 초보자도 한눈에 직관적으로 파악할 수 있도록 주식/차트 데이터를 설명해주는 '최고의 AI 시황 멘토'입니다.
-            현재 당신은 '{system_context}' 탭(분석 엔진)의 역할을 맡고 있습니다.
-            다음 [{target_name}]의 최근 데이터를 바탕으로 **핵심만 딱 짚어주는 [30% 압축 설명형 + 개조식 결합 양식]**으로 답변해주세요.
+            현재 당신은 '{tab_id}' ({system_context}) 탭의 전담 분석 멘토입니다.
 
-            [최근 데이터 요약]
+            {guidelines}
+
+            다음 [{target_name}]의 '{tab_id}' 전담 데이터를 바탕으로 **중학생도 단번에 이해하는 [30% 압축 설명형 + 개조식 결합 양식]**으로 답변해주세요.
+
+            ['{tab_id}' 전담 데이터 요약]
             {data_context}
 
             [🚨 작성 제약 및 규칙 (엄격 준수) 🚨]
             - **분량 제약**: 불필요한 서론/부연 설명을 절대로 넣지 말고, 전체 답변을 기존의 30% 수준인 **딱 5~7줄 이내의 컴팩트한 길이**로 작성할 것!
             - 분석 대상: {target_name} (🚨 주의: 코스피, 나스닥 등 '시장 지수'인 경우 '종목', '이 주식'이란 단어를 절대 쓰지 말고 반드시 지수 명칭으로 부를 것!)
             - 말투: 친근하고 명쾌한 부드러운 존댓말 (~해요, ~예요, ~합니다)
-            - 반드시 아래의 **[💡 핵심 한 줄 진단]** (설명형) 섹션과 **[⚡ 주요 지표 및 체크포인트]** (개조식) 섹션 구조 그대로 마크다운으로 출력할 것:
+            - 🚨 지침 준수: 위 [{tab_id} 전담 분석 영역 및 준수 사항]에 명시된 주제에만 100% 집중할 것. 다른 탭의 일반 지표(RSI, MACD 등)를 엉뚱하게 언급하면 안 됨!
+            - 반드시 아래의 **### 💡 핵심 한 줄 진단** (설명형) 섹션과 **### ⚡ 주요 지표 및 체크포인트** (개조식) 섹션 구조 그대로 마크다운으로 출력할 것:
 
             ### 💡 핵심 한 줄 진단
-            (현재 [{target_name}]의 흐름과 '{system_context}' 엔진이 포착한 핵심 상태를 중학생도 한눈에 알아듣는 비유로 1~2줄 요약)
+            (현재 [{target_name}]의 흐름 중 오직 '{tab_id}' 관점에서 포착된 핵심 상태를 중학생도 한눈에 알아듣는 일상 비유로 1~2줄 압축 요약)
 
             ### ⚡ 주요 지표 및 체크포인트
-            - **[지표 진단]**: (최근 등락률, RSI, OBV, 수급 등 실제 데이터 수치가 의미하는 속뜻을 1줄로 명쾌히 요약)
-            - **[차트 포인트]**: (화면 하단 차트에서 눈여겨봐야 할 선이나 추세의 핵심 포인트 1줄)
-            - **[종합 판단]**: (현재 시점에서의 결론 및 행동 가이드 1줄)
+            - **[전문 진단]**: (위 '{tab_id}' 전담 데이터에 나와있는 핵심 수치가 말해주는 속뜻을 1줄 명쾌히 요약)
+            - **[관찰 포인트]**: (현재 '{tab_id}' 탭 화면/게이지/차트에서 눈여겨봐야 할 핵심 임계치나 시그널 1줄)
+            - **[행동 가이드]**: (초보자를 위한 명확한 대처 방안 1줄)
             """
             
             try:
