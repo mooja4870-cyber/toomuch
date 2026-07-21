@@ -1,5 +1,18 @@
 # Version History
 
+## v1.13.27
+
+Date: 2026-07-21
+
+### 변경 내용
+* `batch_results.json` 캐시 누락 시 실시간 API 호출로 로딩이 길어지던 문제 해결을 위해, `batch_worker.py`가 API 키 부재 시 30분 대신 10초 주기로 재검사 후 즉시 배치를 돌리도록 로직 개선
+* Streamlit 앱(`overheat_analyzer.py`) 구동 또는 API 키 입력 시 백그라운드 워커(`batch_worker.py`)의 동작 여부를 프로세스 목록에서 감지하고, 미실행 중일 경우 `venv/bin/python`으로 자동 기동(`ensure_batch_worker_running`)하여 캐싱 유지 보장
+
+### 수정 파일
+* overheat_analyzer.py
+* batch_worker.py
+* ver.md
+
 ## v1.13.26
 
 Date: 2026-07-21

@@ -136,6 +136,30 @@ api_key = st.sidebar.text_input(
     on_change=save_api_key
 )
 st.session_state["gemini_api_key"] = api_key
+if api_key and api_key != default_api_key:
+    try:
+        with open(API_KEY_FILE, "w", encoding="utf-8") as f:
+            f.write(api_key.strip())
+    except Exception:
+        pass
+
+def ensure_batch_worker_running():
+    import subprocess
+    import sys
+    if not os.path.exists(API_KEY_FILE):
+        return
+    try:
+        ps_out = subprocess.check_output(["ps", "aux"], text=True)
+        if "batch_worker.py" not in ps_out:
+            worker_path = os.path.join(os.path.dirname(__file__), "batch_worker.py")
+            if os.path.exists(worker_path):
+                venv_python = os.path.join(os.path.dirname(__file__), "venv", "bin", "python")
+                py_exec = venv_python if os.path.exists(venv_python) else sys.executable
+                subprocess.Popen([py_exec, worker_path], cwd=os.path.dirname(__file__), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+ensure_batch_worker_running()
 use_macro = st.sidebar.checkbox("매크로 자금동향 포함 (신용잔고/예탁금)", value=True, key="sidebar_use_macro")
 macro_df = None
 if use_macro:

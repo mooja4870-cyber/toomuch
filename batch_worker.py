@@ -11,14 +11,14 @@ def run_batch():
     API_KEY_FILE = os.path.join(os.path.dirname(__file__), ".api_key.txt")
     if not os.path.exists(API_KEY_FILE):
         print("No API key found in .api_key.txt. Skipping batch.")
-        return
+        return False
         
     with open(API_KEY_FILE, "r", encoding="utf-8") as f:
         api_key = f.read().strip()
         
     if not api_key:
         print("API key is empty. Skipping batch.")
-        return
+        return False
         
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-2.5-flash")
@@ -87,10 +87,15 @@ def run_batch():
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump({"timestamp": today.strftime("%Y-%m-%d %H:%M:%S"), "data": results}, f, ensure_ascii=False, indent=4)
     print(f"Batch completed at {today.strftime('%Y-%m-%d %H:%M:%S')}")
+    return True
 
 if __name__ == "__main__":
     while True:
         print("Starting batch job...")
-        run_batch()
-        print("Waiting for 30 minutes...")
-        time.sleep(1800)
+        success = run_batch()
+        if not success:
+            print("Waiting for 10 seconds before checking API key again...")
+            time.sleep(10)
+        else:
+            print("Waiting for 30 minutes...")
+            time.sleep(1800)
