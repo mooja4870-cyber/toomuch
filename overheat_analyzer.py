@@ -19,18 +19,6 @@ st.markdown("""
         background-size: 1.5cm 1.5cm, 1.5cm 1.5cm;
         background-color: #0e1117;
     }
-    
-    /* 선택된 탭 하단 빨간 라인 두께 증가(133%) 및 깜빡임 효과 (1초) */
-    div[data-baseweb="tab-highlight"] {
-        height: 4px !important; /* 기본 대비 약 133% 두께 */
-        animation: tab-indicator-blink 1s infinite !important;
-    }
-    @keyframes tab-indicator-blink {
-        0% { opacity: 1; transform: scaleY(1); }
-        50% { opacity: 0.15; transform: scaleY(1.1); }
-        100% { opacity: 1; transform: scaleY(1); }
-    }
-
     /* 지정일자 상단 황금색 역삼각형 깜빡임 애니메이션 (1초 간격 반복) */
     .textpoint text,
     text[style*="255, 215, 0"],
@@ -254,6 +242,20 @@ if symbol:
                         "⚡ [PRO 4] 파생/베이시스 매크로 레이더",
                         "🤖 [PRO 5] AI 요약 & 실시간 알림"
                     ])
+                    
+                    st.markdown("""
+                        <style>
+                        @keyframes tab-highlight-blink {
+                            0%, 100% { opacity: 1; }
+                            50% { opacity: 0; }
+                        }
+                        div[data-baseweb="tab-highlight"] {
+                            transform: scaleY(1.88);
+                            transform-origin: bottom;
+                            animation: tab-highlight-blink 1s infinite;
+                        }
+                        </style>
+                    """, unsafe_allow_html=True)
                     
                     components.html("""
                     <script>
